@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ComponentPrice {
+  id              String  @id @default(cuid())
+  catalogNumber   String? @unique
+  description     String
+  make            String
+  category        String
+  listPrice       Float
+  discountPercent Float   @default(0)
+  netPrice        Float
+  entryType       String
+
+  @@unique([description, make])
+}
