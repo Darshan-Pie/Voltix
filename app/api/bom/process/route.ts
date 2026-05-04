@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { processBom, CatalogEntry, BomInputRow } from "@/lib/pricingEngine";
 import * as XLSX from "xlsx";
@@ -157,6 +159,12 @@ function isTitleLikeRow(row: unknown[]): boolean {
 // ─── POST /api/bom/process ─────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
+    // ── Auth: require a valid session ────────────────────────────────────────
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -293,7 +301,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const catalog = (await prisma.componentPrice.findMany()) as CatalogEntry[];
+    // ── Step 5a: Build scoped catalog based on user permissions ──────────────
+    //
+    // Look up the logged-in user's profile so we can check canAccessAdminCatalog.
+    // If false  → only their own private catalog items.
+    // If true   → their items first (priority), then ADMIN-owned items appended.
+    //             The ordering alone implements conflict resolution:
+    //             matchRow() stops on first hit, so user-private always wins.
+    //
+    const userProfile = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canAccessAdminCatalog: true },
+    });
+
+    let catalog: CatalogEntry[];
+
+    if (!userProfile?.canAccessAdminCatalog) {
+      // Isolated mode: only the user's own catalog
+      catalog = (await prisma.componentPrice.findMany({
+        where: { userId: session.user.id },
+      })) as CatalogEntry[];
+    } else {
+      // Shared mode: user's private items first (they win on conflict),
+      // then ADMIN-owned items that the user doesn't already own.
+      const [userItems, adminItems] = await Promise.all([
+        prisma.componentPrice.findMany({
+          where: { userId: session.user.id },
+        }),
+        prisma.componentPrice.findMany({
+          where: {
+            user: { role: "ADMIN" },
+            NOT: { userId: session.user.id },
+          },
+        }),
+      ]);
+      // User-private first → they shadow any matching admin entry
+      catalog = [...userItems, ...adminItems] as CatalogEntry[];
+    }
+
     const priced  = processBom(bomRowsToPrice, catalog);
 
     // ── Step 6: Reconstruct interleaved final array ──

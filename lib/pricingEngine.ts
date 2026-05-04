@@ -1,5 +1,6 @@
 export interface CatalogEntry {
   id: string;
+  userId: string;
   catalogNumber: string | null;
   description: string;
   make: string;
@@ -41,7 +42,13 @@ export function computeNetPrice(listPrice: number, discountPercent: number): num
 
 /**
  * Price a single BOM row against the loaded catalog.
- * Priority:
+ *
+ * The caller is responsible for ordering the catalog so that higher-priority
+ * entries (e.g. the user's own private catalog) come before lower-priority
+ * entries (e.g. the shared admin catalog).  matchRow stops on the first hit,
+ * so the ordering alone implements conflict resolution.
+ *
+ * Priority within matchRow:
  *  1. Exact catalogue number match (case-insensitive trim)
  *  2. Description + Make match (case-insensitive trim)
  */
@@ -71,13 +78,11 @@ export function matchRow(row: BomInputRow, catalog: CatalogEntry[]): PricedBomRo
   }
 
   if (!matched) {
-    // Failsafe: preserve whatever catalog number came from the uploaded file.
-    // Do NOT overwrite it with null just because the DB lookup found nothing.
     const inputCatNo = row.catalogNumber ?? null;
     return {
       ...row,
-      catalogNumber:        inputCatNo,   // keep input value
-      matchedCatalogNumber: inputCatNo,   // display the same upstream value
+      catalogNumber:        inputCatNo,
+      matchedCatalogNumber: inputCatNo,
       listPrice:       null,
       discountPercent: null,
       discountedRate:  null,
@@ -93,7 +98,6 @@ export function matchRow(row: BomInputRow, catalog: CatalogEntry[]): PricedBomRo
 
   return {
     ...row,
-    // Auto-enrich: inject catalog number if missing from input
     catalogNumber: row.catalogNumber || matched.catalogNumber,
     matchedCatalogNumber: matched.catalogNumber,
     listPrice: matched.listPrice,
@@ -108,6 +112,8 @@ export function matchRow(row: BomInputRow, catalog: CatalogEntry[]): PricedBomRo
 
 /**
  * Process all BOM rows against the catalog.
+ * Catalog must be pre-ordered: user-private entries first, admin entries last.
+ * This ensures user-private prices always win on conflict.
  */
 export function processBom(rows: BomInputRow[], catalog: CatalogEntry[]): PricedBomRow[] {
   return rows.map((row) => matchRow(row, catalog));

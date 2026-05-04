@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeNetPrice } from "@/lib/pricingEngine";
 
-// GET /api/catalog — fetch all components sorted by make, category, description
+// ── Auth helper ───────────────────────────────────────────────────────────────
+async function requireSession() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return null;
+  return session;
+}
+
+// GET /api/catalog — fetch only the current user's catalog items
 export async function GET() {
   try {
+    const session = await requireSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const items = await prisma.componentPrice.findMany({
+      where: { userId: session.user.id },
       orderBy: [{ make: "asc" }, { category: "asc" }, { description: "asc" }],
     });
     return NextResponse.json(items);
@@ -15,9 +30,14 @@ export async function GET() {
   }
 }
 
-// POST /api/catalog — create a new component entry
+// POST /api/catalog — create a new component entry owned by the current user
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const {
       catalogNumber,
@@ -40,6 +60,7 @@ export async function POST(req: NextRequest) {
 
     const item = await prisma.componentPrice.create({
       data: {
+        userId: session.user.id,
         catalogNumber: catalogNumber || null,
         description,
         make,
@@ -57,7 +78,7 @@ export async function POST(req: NextRequest) {
     const msg = error instanceof Error ? error.message : String(error);
     if (msg.includes("Unique constraint")) {
       return NextResponse.json(
-        { error: "A component with this description+make or catalogNumber already exists." },
+        { error: "A component with this description+make or catalogNumber already exists in your catalog." },
         { status: 409 }
       );
     }

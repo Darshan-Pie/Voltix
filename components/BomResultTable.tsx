@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import * as XLSX from "xlsx";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -61,6 +61,9 @@ const STATUS_LABELS: Record<MatchStatus, { label: string; cls: string }> = {
 /** Fields that directly affect math — recalc immediately on every keystroke */
 const MATH_FIELDS = new Set<keyof PricedBomRow>(["qty", "listPrice", "discountPercent"]);
 
+// Columns that get a <select> combo-box filter (exact-match); all others get a text <input>
+const BRT_SELECT_COLS = new Set<keyof PricedBomRow>(["unit", "make", "category"]);
+
 
 
 
@@ -83,11 +86,21 @@ function fmtINR(v: number | null) {
 function deriveStats(data: BomResultRow[]) {
   const components = data.filter((r): r is PricedBomRow => !isTitle(r));
   const matched = components.filter((r) => r.matchStatus !== "not_found").length;
-  return {
-    total: components.length,
-    matched,
-    unmatched: components.length - matched,
-  };
+  return { total: components.length, matched, unmatched: components.length - matched };
+}
+
+// ── Sort helpers ─────────────────────────────────────────────────────────────
+
+type BrtSortCol = keyof PricedBomRow | null;
+type BrtSortDir = "asc" | "desc";
+
+function SortIcon({ active, dir }: { active: boolean; dir: BrtSortDir }) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 4, flexShrink: 0, verticalAlign: "middle" }}>
+      <path d="M5 1L2 4h6L5 1z" fill={active && dir === "asc"  ? "var(--cyan)" : "var(--border-2)"} />
+      <path d="M5 9L2 6h6L5 9z" fill={active && dir === "desc" ? "var(--cyan)" : "var(--border-2)"} />
+    </svg>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -97,8 +110,12 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
   const [bomData, setBomData] = useState<BomResultRow[]>(() => rows);
   const [filter, setFilter] = useState<"all" | MatchStatus>("all");
   const [lookingUp, setLookingUp] = useState<Set<number>>(new Set());
-  // Indices of rows currently animating a propagation flash
   const [flashingRows, setFlashingRows] = useState<Set<number>>(new Set());
+
+  // ── Sort & column-filter state ──
+  const [sortCol,     setSortCol]     = useState<BrtSortCol>(null);
+  const [sortDir,     setSortDir]     = useState<BrtSortDir>("asc");
+  const [colFilters,  setColFilters]  = useState<Partial<Record<keyof PricedBomRow, string>>>({});
 
   // Keep bomData in sync if parent re-sends rows (new upload)
   useEffect(() => { setBomData(rows); }, [rows]);
@@ -110,16 +127,86 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
     0
   );
 
-  // ── Filtered view ──
-  // We track original indices so edits map back correctly
-  const indexedRows: Array<{ row: BomResultRow; originalIdx: number }> =
-    bomData.map((row, i) => ({ row, originalIdx: i }));
+  // ── Sort / filter helpers ──
+  const handleBrtSort = (col: keyof PricedBomRow) => {
+    if (sortCol === col) { setSortDir((d) => (d === "asc" ? "desc" : "asc")); }
+    else { setSortCol(col); setSortDir("asc"); }
+  };
+  const setColFilter = (col: keyof PricedBomRow, val: string) =>
+    setColFilters((prev) => ({ ...prev, [col]: val }));
 
-  // Title rows always pass through — they group whatever is visible below them
-  const filtered =
-    filter === "all"
-      ? indexedRows
-      : indexedRows.filter(({ row }) => isTitle(row) || row.matchStatus === filter);
+  const hasColActivity = Object.values(colFilters).some(Boolean) || sortCol !== null;
+  const clearBrtFilters = () => { setColFilters({}); setSortCol(null); };
+
+  // ── Unique option lists — derived from raw (unfiltered) component rows ──
+  const rawComponents = useMemo(
+    () => bomData.filter((r): r is PricedBomRow => !isTitle(r)),
+    [bomData]
+  );
+  const uniqueUnits      = useMemo(() => Array.from(new Set(rawComponents.map(r => r.unit).filter(Boolean))).sort(), [rawComponents]);
+  const uniqueMakes      = useMemo(() => Array.from(new Set(rawComponents.map(r => r.make).filter(Boolean))).sort(), [rawComponents]);
+  const uniqueCategories = useMemo(() => Array.from(new Set(rawComponents.map(r => r.category ?? "").filter(Boolean))).sort(), [rawComponents]);
+
+  const brtColOptions: Partial<Record<keyof PricedBomRow, string[]>> = {
+    unit:     uniqueUnits,
+    make:     uniqueMakes,
+    category: uniqueCategories,
+  };
+
+  // ── Derived view: status filter → column filters → sort ──
+  //
+  // When a column filter or sort is active, title rows are omitted
+  // (their meaning as section dividers is lost when order changes).
+  // updateRow always works on bomData by originalIdx, so editing is unaffected.
+  //
+  const indexedRows = useMemo(
+    () => bomData.map((row, i) => ({ row, originalIdx: i })),
+    [bomData]
+  );
+
+  const filtered = useMemo(() => {
+    // 1) Status dropdown filter
+    let base =
+      filter === "all"
+        ? indexedRows
+        : indexedRows.filter(({ row }) => isTitle(row) || row.matchStatus === filter);
+
+    // 2) Column filters — strip title rows when any filter is active
+    // SELECT cols → exact match; text cols → case-insensitive substring
+    const anyColFilter = Object.values(colFilters).some(Boolean);
+    if (anyColFilter) {
+      base = base.filter(({ row }) => {
+        if (isTitle(row)) return false; // hide section dividers during filtering
+        const comp = row as PricedBomRow;
+        return Object.entries(colFilters).every(([col, term]) => {
+          if (!term) return true;
+          const key = col as keyof PricedBomRow;
+          const val = String(comp[key] ?? "");
+          if (BRT_SELECT_COLS.has(key)) return val === term;          // exact
+          return val.toLowerCase().includes(term.toLowerCase());      // substring
+        });
+      });
+    }
+
+    // 3) Sort — also strip title rows to avoid interleaving confusion
+    if (sortCol) {
+      const compRows  = base.filter(({ row }) => !isTitle(row));
+      const titleRows = base.filter(({ row }) =>  isTitle(row));
+      compRows.sort((a, b) => {
+        const av = (a.row as PricedBomRow)[sortCol] ?? "";
+        const bv = (b.row as PricedBomRow)[sortCol] ?? "";
+        let cmp = 0;
+        if (typeof av === "number" && typeof bv === "number") cmp = av - bv;
+        else cmp = String(av).toLowerCase().localeCompare(String(bv).toLowerCase());
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+      // When sorted, title rows are irrelevant — return only sorted component rows
+      void titleRows; // suppress unused-var lint
+      return compRows;
+    }
+
+    return base;
+  }, [indexedRows, filter, colFilters, sortCol, sortDir]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // updateRow — central cell-update handler
@@ -254,8 +341,8 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
   const triggerLookup = useCallback(async (idx: number) => {
     const row = bomData[idx];
 
-    // Skip if we don't have the minimum required fields
-    if (!row.description && !row.catalogNumber) return;
+    // Skip title rows and rows missing both identity fields
+    if (isTitle(row) || (!row.description && !row.catalogNumber)) return;
 
     setLookingUp((s) => new Set(s).add(idx));
 
@@ -318,14 +405,14 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
   }, [bomData]);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Export — reads from live bomData state
+  // Export — exports the CURRENT filtered+sorted view (what the user sees)
   // ─────────────────────────────────────────────────────────────────────────
   const handleExport = useCallback(() => {
-    const exportRows = bomData.map((r) => {
+    const exportRows = filtered.map(({ row }) => {
       // Title rows → single-cell row so panel headings survive the round-trip
-      if (isTitle(r)) {
+      if (isTitle(row)) {
         return {
-          "Sr. No.":        r.titleText,
+          "Sr. No.":        row.titleText,
           "Description":    "",
           "Qty":            "",
           "Unit":           "",
@@ -340,18 +427,18 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
         };
       }
       return {
-        "Sr. No.":        r.srNo,
-        "Description":    r.description,
-        "Qty":            r.qty,
-        "Unit":           r.unit,
-        "Make":           r.make,
-        "Catalogue No.":  r.matchedCatalogNumber ?? r.catalogNumber ?? "",
-        "Category":       r.category ?? "",
-        "List Price (₹)": r.listPrice ?? "",
-        "Discount (%)":   r.discountPercent ?? "",
-        "Disc. Rate (₹)": r.discountedRate ?? "",
-        "Net Amount (₹)": r.netAmount ?? "",
-        "Match Status":   r.matchStatus,
+        "Sr. No.":        row.srNo,
+        "Description":    row.description,
+        "Qty":            row.qty,
+        "Unit":           row.unit,
+        "Make":           row.make,
+        "Catalogue No.":  row.matchedCatalogNumber ?? row.catalogNumber ?? "",
+        "Category":       row.category ?? "",
+        "List Price (₹)": row.listPrice ?? "",
+        "Discount (%)":   row.discountPercent ?? "",
+        "Disc. Rate (₹)": row.discountedRate ?? "",
+        "Net Amount (₹)": row.netAmount ?? "",
+        "Match Status":   row.matchStatus,
       };
     });
 
@@ -363,7 +450,7 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Priced BOM");
     XLSX.writeFile(wb, fileName.replace(/\.[^.]+$/, "") + "_priced.xlsx");
-  }, [bomData, fileName]);
+  }, [filtered, fileName]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render
@@ -428,6 +515,11 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
             </svg>
             New BOM
           </button>
+          {hasColActivity && (
+            <button className="btn btn-ghost btn-sm" onClick={clearBrtFilters} title="Clear column sorts and filters">
+              ✕ Clear
+            </button>
+          )}
         </div>
       </div>
 
@@ -444,19 +536,70 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
       <div className="table-wrap brt-table-wrap">
         <table id="bom-result-table">
           <thead>
+            {/* ── Sort header row ── */}
             <tr>
-              <th>#</th>
-              <th className="col-desc">Description</th>
-              <th className="col-num">Qty</th>
-              <th className="col-unit">Unit</th>
-              <th className="col-make">Make</th>
-              <th className="col-catno">Cat. No.</th>
-              <th className="col-cat">Category</th>
-              <th className="col-num">List Price</th>
-              <th className="col-num">Disc %</th>
-              <th className="col-num">Disc. Rate</th>
-              <th className="col-num">Net Amount</th>
+              <th style={{width:36}}>#</th>
+              {([
+                ["description",   "Description",  "col-desc"],
+                ["qty",           "Qty",           "col-num" ],
+                ["unit",          "Unit",          "col-unit"],
+                ["make",          "Make",          "col-make"],
+                ["matchedCatalogNumber", "Cat. No.", "col-catno"],
+                ["category",      "Category",     "col-cat" ],
+                ["listPrice",     "List Price",    "col-num" ],
+                ["discountPercent","Disc %",       "col-num" ],
+                ["discountedRate", "Disc. Rate",   "col-num" ],
+                ["netAmount",     "Net Amount",    "col-num" ],
+              ] as [keyof PricedBomRow, string, string][]).map(([col, label, cls]) => (
+                <th
+                  key={col}
+                  className={`${cls} brt-th-sort`}
+                  onClick={() => handleBrtSort(col)}
+                  title={`Sort by ${label}`}
+                >
+                  <span className="brt-th-inner">
+                    {label}
+                    <SortIcon active={sortCol === col} dir={sortDir} />
+                  </span>
+                </th>
+              ))}
               <th>Status</th>
+            </tr>
+
+            {/* ── Column filter row ── */}
+            <tr className="brt-filter-row">
+              <td />{/* # */}
+              {([
+                "description", "qty", "unit", "make",
+                "matchedCatalogNumber", "category",
+                "listPrice", "discountPercent", "discountedRate", "netAmount",
+              ] as (keyof PricedBomRow)[]).map((col) => (
+                <td key={col}>
+                  {BRT_SELECT_COLS.has(col) ? (
+                    <select
+                      className="brt-filter-select"
+                      value={colFilters[col] ?? ""}
+                      onChange={(e) => setColFilter(col, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <option value="">All</option>
+                      {(brtColOptions[col] ?? []).map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="brt-filter-input"
+                      type="text"
+                      placeholder="…"
+                      value={colFilters[col] ?? ""}
+                      onChange={(e) => setColFilter(col, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                </td>
+              ))}
+              <td />{/* Status */}
             </tr>
           </thead>
           <tbody>
@@ -639,6 +782,54 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
         /* ── Table ── */
         .brt-table-wrap { max-height: calc(100vh - 400px); }
         .brt-row-unmatched { background: rgba(239,68,68,0.035); }
+
+        /* ── Sortable headers ── */
+        .brt-th-sort { cursor: pointer; user-select: none; }
+        .brt-th-sort:hover { color: var(--cyan); }
+        .brt-th-inner { display: inline-flex; align-items: center; gap: 2px; }
+
+        /* ── Column filter row ── */
+        .brt-filter-row td {
+          padding: 3px 4px;
+          background: var(--surface-3);
+          border-bottom: 1px solid var(--border);
+        }
+        /* shared base */
+        .brt-filter-input,
+        .brt-filter-select {
+          width: 100%;
+          background: transparent;
+          border: 1px solid transparent;
+          border-radius: 4px;
+          color: var(--text);
+          font-family: var(--font-sans);
+          font-size: 11px;
+          padding: 2px 5px;
+          outline: none;
+          transition: border-color 0.15s, background 0.15s;
+          box-sizing: border-box;
+        }
+        .brt-filter-input:focus,
+        .brt-filter-select:focus {
+          border-color: var(--cyan);
+          background: var(--surface-2);
+          box-shadow: 0 0 0 2px rgba(0,212,255,0.08);
+        }
+        .brt-filter-input::placeholder { color: var(--border-2); }
+        /* select-specific */
+        .brt-filter-select {
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 5px center;
+          padding-right: 20px;
+        }
+        .brt-filter-select option {
+          background: var(--surface);
+          color: var(--text);
+        }
 
         /* ── Panel / section title rows ── */
         .brt-row-title {

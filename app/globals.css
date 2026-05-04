@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ─── Design Tokens ─────────────────────────────────────────────── */
+/* ─── Design Tokens — Dark (default) ────────────────────────────── */
 :root {
   --bg:          #080810;
   --surface:     #0f0f1a;
@@ -28,8 +28,40 @@
   --radius-lg:  12px;
   --radius-xl:  16px;
 
-  --glow-cyan:  0 0 20px rgba(0, 212, 255, 0.15);
-  --glow-violet:0 0 20px rgba(124, 58, 237, 0.15);
+  --glow-cyan:   0 0 20px rgba(0, 212, 255, 0.15);
+  --glow-violet: 0 0 20px rgba(124, 58, 237, 0.15);
+}
+
+/* ─── Design Tokens — Light ──────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:          #f0f2f8;
+  --surface:     #ffffff;
+  --surface-2:   #f4f6fc;
+  --surface-3:   #eaecf5;
+  --border:      #d8dce8;
+  --border-2:    #c4c8d8;
+
+  --cyan:        #0099cc;
+  --cyan-dim:    #007aa8;
+  --violet:      #6d28d9;
+  --violet-dim:  #5b21b6;
+  --success:     #16a34a;
+  --warning:     #d97706;
+  --error:       #dc2626;
+
+  --text:        #111120;
+  --text-muted:  #7a7d90;
+  --text-dim:    #555770;
+
+  --glow-cyan:   0 0 20px rgba(0, 153, 204, 0.18);
+  --glow-violet: 0 0 20px rgba(109, 40, 217, 0.18);
+
+  --nav-bg: rgba(240,242,248,0.90);
+}
+
+/* ─── Smooth theme transition ────────────────────────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }
 
 /* ─── Reset & Base ───────────────────────────────────────────────── */
@@ -237,7 +269,7 @@ tbody tr {
 }
 
 tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody tr:hover { background: var(--surface-2); }
 
 tbody td {
   padding: 8px 12px;

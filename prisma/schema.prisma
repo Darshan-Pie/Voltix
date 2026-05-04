@@ -7,9 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id                    String           @id @default(cuid())
+  email                 String           @unique
+  password              String
+  name                  String?
+  role                  Role             @default(USER)
+  canAccessAdminCatalog Boolean          @default(false)
+  createdAt             DateTime         @default(now())
+  catalogItems          ComponentPrice[]
+}
+
 model ComponentPrice {
   id              String  @id @default(cuid())
-  catalogNumber   String? @unique
+  userId          String  @default("")
+  catalogNumber   String?
   description     String
   make            String
   category        String
@@ -17,6 +34,8 @@ model ComponentPrice {
   discountPercent Float   @default(0)
   netPrice        Float
   entryType       String
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([description, make])
+  @@unique([userId, description, make])
+  @@unique([userId, catalogNumber])
 }
