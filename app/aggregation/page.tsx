@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useMemo } from "react";
 import * as XLSX from "xlsx";
+import { PageTransition } from "@/components/PageTransition";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -177,6 +178,7 @@ export default function AggregationPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
+    <PageTransition>
     <div className="container" style={{ paddingTop: 40, paddingBottom: 60 }}>
 
       {/* Page header */}
@@ -477,5 +479,6 @@ export default function AggregationPage() {
         .agg-row-merged td:first-child { border-left: 3px solid var(--cyan); }
       `}</style>
     </div>
+    </PageTransition>
   );
 }

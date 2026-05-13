@@ -145,13 +145,21 @@ code, .mono { font-family: var(--font-mono); }
   background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dim) 100%);
   color: #000;
 }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: var(--glow-cyan); }
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--glow-cyan), 0 0 0 3px rgba(0,212,255,0.15);
+  filter: brightness(1.08);
+}
 
 .btn-violet {
   background: linear-gradient(135deg, var(--violet) 0%, var(--violet-dim) 100%);
   color: #fff;
 }
-.btn-violet:hover { transform: translateY(-1px); box-shadow: var(--glow-violet); }
+.btn-violet:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--glow-violet), 0 0 0 3px rgba(124,58,237,0.2);
+  filter: brightness(1.08);
+}
 
 .btn-ghost {
   background: transparent;
@@ -269,7 +277,10 @@ tbody tr {
 }
 
 tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: var(--surface-2); }
+tbody tr:hover {
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
 
 tbody td {
   padding: 8px 12px;
@@ -335,6 +346,15 @@ tbody td {
 
 .animate-spin  { animation: spin 0.8s linear infinite; display: inline-block; }
 .animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+/* Row cascade — used for staggered BOM table appear */
+@keyframes rowCascade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.row-cascade {
+  animation: rowCascade 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
 
 /* ─── Misc ───────────────────────────────────────────────────────── */
 .divider { height: 1px; background: var(--border); width: 100%; margin: 8px 0; }

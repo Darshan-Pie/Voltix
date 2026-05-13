@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Providers } from "./providers";
 import { NavSignOut } from "@/components/NavSignOut";
+import { VoltixLogo } from "@/components/VoltixLogo";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,23 +17,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>
+          {/* ── Ambient background glows ──────────────────────────────── */}
+          <div className="global-bg" aria-hidden="true">
+            <div className="global-glow global-glow-1" />
+            <div className="global-glow global-glow-2" />
+            <div className="global-grid" />
+          </div>
+
           <header className="nav-bar">
             <div className="container">
               <div className="nav-inner">
                 {/* VoltIX Logo */}
-                <Link href="/" className="nav-logo" id="nav-logo">
-                  <div className="nav-logo-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path
-                        d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"
-                        fill="white"
-                      />
-                    </svg>
-                  </div>
-                  <span className="nav-logo-text">
-                    <span className="nav-logo-volt">Volt</span>
-                    <span className="nav-logo-ix">IX</span>
-                  </span>
+                <Link href="/" id="nav-logo" style={{ textDecoration: "none" }}>
+                  <VoltixLogo size={34} textSize={19} glow />
                 </Link>
 
                 {/* Nav links */}
@@ -74,16 +71,66 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </header>
 
-          <main style={{minHeight: "calc(100vh - 60px)"}}>
+          <main style={{minHeight: "calc(100vh - 60px)", position: "relative", zIndex: 1}}>
             {children}
           </main>
         </Providers>
 
         <style>{`
+          /* ── Fixed ambient background ── */
+          .global-bg {
+            position: fixed; inset: 0; z-index: 0;
+            pointer-events: none; overflow: hidden;
+          }
+          .global-glow {
+            position: absolute; border-radius: 50%;
+            filter: blur(100px); opacity: 0.55;
+            animation: bgDrift 18s ease-in-out infinite alternate;
+          }
+          .global-glow-1 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(124,58,237,0.22) 0%, transparent 70%);
+            top: -200px; left: -150px;
+            animation-delay: 0s;
+          }
+          .global-glow-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(0,212,255,0.14) 0%, transparent 70%);
+            bottom: -100px; right: -100px;
+            animation-delay: -9s;
+          }
+          @keyframes bgDrift {
+            0%   { transform: translate(0px, 0px) scale(1); }
+            33%  { transform: translate(30px, -20px) scale(1.05); }
+            66%  { transform: translate(-15px, 25px) scale(0.97); }
+            100% { transform: translate(10px, -10px) scale(1.02); }
+          }
+
+          /* Subtle grid overlay */
+          .global-grid {
+            position: absolute; inset: 0;
+            background-image:
+              linear-gradient(rgba(124,58,237,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(124,58,237,0.03) 1px, transparent 1px);
+            background-size: 56px 56px;
+          }
+          [data-theme="light"] .global-glow-1 {
+            background: radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%);
+          }
+          [data-theme="light"] .global-glow-2 {
+            background: radial-gradient(circle, rgba(0,150,200,0.08) 0%, transparent 70%);
+          }
+          [data-theme="light"] .global-grid {
+            background-image:
+              linear-gradient(rgba(124,58,237,0.025) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(124,58,237,0.025) 1px, transparent 1px);
+          }
+
+          /* ── Nav bar ── */
           .nav-bar {
             position: sticky; top: 0; z-index: 50;
-            background: var(--nav-bg, rgba(8,8,16,0.88));
-            backdrop-filter: blur(16px) saturate(1.5);
+            background: var(--nav-bg, rgba(8,8,16,0.85));
+            backdrop-filter: blur(20px) saturate(1.6);
             border-bottom: 1px solid var(--border);
             height: 60px;
           }
@@ -91,33 +138,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             display: flex; align-items: center; gap: 8px;
             height: 60px;
           }
-
-          /* VoltIX Logo */
-          .nav-logo {
-            display: flex; align-items: center; gap: 10px;
-            text-decoration: none; flex-shrink: 0;
-          }
-          .nav-logo-icon {
-            width: 34px; height: 34px; border-radius: 9px;
-            background: linear-gradient(135deg, #7c3aed, #00d4ff);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 12px rgba(124,58,237,0.45);
-            transition: box-shadow 0.2s, transform 0.2s;
-            flex-shrink: 0;
-          }
-          .nav-logo:hover .nav-logo-icon {
-            box-shadow: 0 4px 20px rgba(124,58,237,0.7);
-            transform: scale(1.05);
-          }
-          .nav-logo-text {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            line-height: 1;
-          }
-          .nav-logo-volt { color: var(--cyan); }
-          .nav-logo-ix   { color: var(--text); }
-
           .nav-links { display: flex; gap: 4px; margin-left: 24px; flex-grow: 1; }
           .nav-link {
             display: inline-flex; align-items: center; gap: 6px;

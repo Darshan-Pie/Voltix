@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { BomDropzone } from "@/components/BomDropzone";
 import { BomResultTable, PricedBomRow } from "@/components/BomResultTable";
+import { PageTransition } from "@/components/PageTransition";
 
 interface ProcessResponse {
   rows: PricedBomRow[];
@@ -47,6 +48,7 @@ export default function BomPage() {
   };
 
   return (
+    <PageTransition>
     <div className="page-bom">
       <div className="container page-header">
         <div>
@@ -191,5 +193,6 @@ export default function BomPage() {
         .bom-hint-inner svg { flex-shrink: 0; margin-top: 2px; }
       `}</style>
     </div>
+    </PageTransition>
   );
 }

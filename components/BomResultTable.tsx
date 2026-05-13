@@ -607,7 +607,11 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
               // ── Panel title / section divider ────────────────────────────
               if (isTitle(row)) {
                 return (
-                  <tr key={row.id} className="brt-row-title">
+                  <tr
+                    key={row.id}
+                    className="brt-row-title row-cascade"
+                    style={{ animationDelay: `${Math.min(filtered.indexOf({ row, originalIdx }), 0) * 30}ms` }}
+                  >
                     <td colSpan={12} className="brt-title-cell">
                       <span className="brt-title-icon">▸</span>
                       {row.titleText}
@@ -623,10 +627,14 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
                 <tr
                   key={originalIdx}
                   className={[
+                    "row-cascade",
                     isUnmatched ? "brt-row-unmatched" : "",
                     flashingRows.has(originalIdx) ? "brt-row-flash" : "",
                   ].join(" ").trim()}
-                  style={{ position: "relative" }}
+                  style={{
+                    position: "relative",
+                    animationDelay: `${Math.min(originalIdx * 28, 800)}ms`,
+                  }}
                 >
                   {/* Sr. No — read-only */}
                   <td className="td-muted brt-td-srno">{row.srNo}</td>

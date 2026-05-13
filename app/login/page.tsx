@@ -3,6 +3,8 @@
 import { useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { VoltixLogo } from "@/components/VoltixLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -75,43 +77,9 @@ export default function LoginPage() {
             0 24px 64px rgba(0, 0, 0, 0.35),
             0 4px 16px rgba(0, 0, 0, 0.2);
           backdrop-filter: blur(20px);
-          animation: cardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
-        @keyframes cardIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* ── Logo ── */
-        .login-logo {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 28px;
-        }
-
-        .login-logo-icon {
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, #7c3aed, #00d4ff);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
-          flex-shrink: 0;
-        }
-
-        .login-logo-text {
-          font-size: 26px;
-          font-weight: 800;
-          letter-spacing: -0.5px;
-          line-height: 1;
-        }
-
-        .login-logo-volt { color: var(--cyan); }
-        .login-logo-ix   { color: var(--text); }
+        .login-logo { margin-bottom: 28px; }
 
         /* ── Heading ── */
         .login-heading {
@@ -279,90 +247,113 @@ export default function LoginPage() {
       <div className="login-root" id="login-page">
         <div className="login-grid" aria-hidden="true" />
 
-        <div className="login-card" role="main">
-          {/* Logo */}
-          <div className="login-logo">
-            <div className="login-logo-icon" aria-hidden="true">
-              {/* Lightning bolt icon */}
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"
-                  fill="white"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <div className="login-logo-text">
-              <span className="login-logo-volt">Volt</span>
-              <span className="login-logo-ix">IX</span>
-            </div>
-          </div>
-
-          <h1 className="login-heading">Welcome back</h1>
-          <p className="login-sub">Sign in to your VoltIX workspace</p>
-
-          <form className="login-form" onSubmit={handleSubmit} id="login-form">
-            {/* Error */}
-            {error && (
-              <div className="login-error" role="alert">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <circle cx="7" cy="7" r="6" stroke="#f87171" strokeWidth="1.5" />
-                  <path d="M7 4v3.5M7 9.5v.5" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                {error}
-              </div>
-            )}
-
-            <div className="login-field">
-              <label htmlFor="login-email" className="login-label">Email</label>
-              <input
-                id="login-email"
-                type="email"
-                className="login-input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                autoFocus
-              />
-            </div>
-
-            <div className="login-field">
-              <label htmlFor="login-password" className="login-label">Password</label>
-              <input
-                id="login-password"
-                type="password"
-                className="login-input"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-            </div>
-
-            <button
-              id="login-submit"
-              type="submit"
-              className="login-btn"
-              disabled={loading}
+        <motion.div
+          className="login-card"
+          role="main"
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {/* Staggered interior */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.07, delayChildren: 0.18 } } }}
+          >
+            {/* Logo */}
+            <motion.div
+              className="login-logo"
+              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
             >
-              <span className="login-btn-inner">
-                {loading && <span className="login-spinner" aria-hidden="true" />}
-                {loading ? "Signing in…" : "Sign in to VoltIX"}
-              </span>
-            </button>
-          </form>
+              <VoltixLogo size={44} textSize={26} />
+            </motion.div>
 
-          <div className="login-footer">
-            <p>
-              Need an account? Ask your admin to create one via{" "}
-              <strong>Prisma Studio</strong> or the seed script.
-            </p>
-          </div>
-        </div>
+            {/* Heading */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+            >
+              <h1 className="login-heading">Welcome back</h1>
+              <p className="login-sub">Sign in to your VoltIX workspace</p>
+            </motion.div>
+
+            {/* Form */}
+            <motion.form
+              className="login-form"
+              onSubmit={handleSubmit}
+              id="login-form"
+              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+            >
+              {error && (
+                <motion.div
+                  className="login-error"
+                  role="alert"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <circle cx="7" cy="7" r="6" stroke="#f87171" strokeWidth="1.5" />
+                    <path d="M7 4v3.5M7 9.5v.5" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  {error}
+                </motion.div>
+              )}
+
+              <div className="login-field">
+                <label htmlFor="login-email" className="login-label">Email</label>
+                <input
+                  id="login-email"
+                  type="email"
+                  className="login-input"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  autoFocus
+                />
+              </div>
+
+              <div className="login-field">
+                <label htmlFor="login-password" className="login-label">Password</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  className="login-input"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <motion.button
+                id="login-submit"
+                type="submit"
+                className="login-btn"
+                disabled={loading}
+                whileHover={{ scale: 1.02, boxShadow: "0 10px 32px rgba(124,58,237,0.6)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="login-btn-inner">
+                  {loading && <span className="login-spinner" aria-hidden="true" />}
+                  {loading ? "Signing in…" : "Sign in to VoltIX"}
+                </span>
+              </motion.button>
+            </motion.form>
+
+            <motion.div
+              className="login-footer"
+              variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.5 } } }}
+            >
+              <p>
+                Need an account? Ask your admin to create one via{" "}
+                <strong>Prisma Studio</strong> or the seed script.
+              </p>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </>
   );
