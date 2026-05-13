@@ -79,11 +79,18 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Scrollbar ──────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--surface); }
-::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+/* ─── Scrollbar — ultra-thin, barely-there ──────────────────────── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(124,58,237,0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,212,255,0.55);
+}
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: rgba(124,58,237,0.35) transparent; }
 
 /* ─── Typography ─────────────────────────────────────────────────── */
 h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; }
@@ -140,6 +147,8 @@ code, .mono { font-family: var(--font-mono); }
 }
 
 .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+/* Spring press micro-interaction */
+.btn:active:not(:disabled) { transform: scale(0.95) translateY(0px) !important; transition: transform 0.08s cubic-bezier(0.22,1,0.36,1); }
 
 .btn-primary {
   background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dim) 100%);
@@ -197,16 +206,27 @@ code, .mono { font-family: var(--font-mono); }
   box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
 }
 
+/* Inline edit input — transparent until interacted with */
 .input-inline {
-  background: var(--surface-3);
-  border: 1px solid var(--cyan);
-  border-radius: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
   color: var(--text);
   font-family: var(--font-mono);
   font-size: 12px;
-  padding: 3px 6px;
+  padding: 3px 8px;
   outline: none;
   width: 100%;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.input-inline:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border-2);
+}
+.input-inline:focus {
+  background: var(--surface-3);
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.12);
 }
 
 .select {
@@ -242,11 +262,24 @@ code, .mono { font-family: var(--font-mono); }
 .badge-violet  { background: rgba(124,58,237,0.12); color: #a78bfa;        border: 1px solid rgba(124,58,237,0.25); }
 .badge-muted   { background: var(--surface-3);       color: var(--text-dim); border: 1px solid var(--border); }
 
-/* ─── Table ──────────────────────────────────────────────────────── */
+/* ─── Table — Floating Box Aesthetic ────────────────────────────── */
 .table-wrap {
   overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  /* Deep rounded glass container */
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 4px 32px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  background: var(--surface);
+}
+[data-theme="light"] .table-wrap {
+  border-color: rgba(0,0,0,0.06);
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 4px 24px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 table {
@@ -258,32 +291,58 @@ table {
 thead { position: sticky; top: 0; z-index: 2; }
 
 thead th {
-  background: var(--surface-2);
+  /* Glassmorphic header */
+  background: rgba(15, 15, 26, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--text-dim);
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 10px 12px;
+  padding: 11px 14px;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  /* Gradient bottom border */
+  border-bottom: 1px solid rgba(124,58,237,0.18);
   white-space: nowrap;
   user-select: none;
 }
+[data-theme="light"] thead th {
+  background: rgba(240,242,248,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
 
 tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background 0.1s;
+  /* No harsh grid lines — use very faint separator */
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-theme="light"] tbody tr {
+  border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 
 tbody tr:last-child { border-bottom: none; }
+
 tbody tr:hover {
-  background: var(--surface-2);
-  box-shadow: inset 3px 0 0 var(--cyan);
+  /* Floating elevation effect */
+  background: rgba(255,255,255,0.03);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.25),
+    inset 3px 0 0 var(--cyan);
+  z-index: 1;
+  position: relative;
+}
+[data-theme="light"] tbody tr:hover {
+  background: rgba(0,212,255,0.04);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.08),
+    inset 3px 0 0 var(--cyan);
 }
 
 tbody td {
-  padding: 8px 12px;
+  padding: 9px 14px;
   color: var(--text);
   font-size: 13px;
   vertical-align: middle;
@@ -372,3 +431,24 @@ tbody td {
 .dot-muted   { background: var(--text-muted); }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ─── Editable cell ghost — shows edit hint on hover ────────────── */
+.editable-cell {
+  cursor: text;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s;
+  position: relative;
+}
+.editable-cell:hover {
+  background: rgba(0,212,255,0.06);
+}
+.edit-hint {
+  opacity: 0;
+  font-size: 10px;
+  color: var(--cyan);
+  margin-left: 4px;
+  transition: opacity 0.15s;
+}
+.editable-cell:hover .edit-hint { opacity: 0.6; }

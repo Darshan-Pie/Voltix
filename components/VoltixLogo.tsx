@@ -1,12 +1,15 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 /**
- * VoltixLogo — SVG-based scalable brand mark.
+ * VoltixLogo — SVG-based scalable brand mark with Framer Motion glow pulse.
  * Props:
- *   size   — controls the icon box size (default 36)
+ *   size     — controls the icon box size (default 36)
  *   textSize — font-size for the wordmark (default 20)
  *   showText — whether to render "VoltIX" wordmark (default true)
  *   className — extra class on the root wrapper
+ *   glow     — if true, adds a continuous Framer Motion glow pulse on the icon
  */
 
 interface VoltixLogoProps {
@@ -14,7 +17,6 @@ interface VoltixLogoProps {
   textSize?: number;
   showText?: boolean;
   className?: string;
-  /** If true, the icon glows on hover (nav version) */
   glow?: boolean;
 }
 
@@ -30,11 +32,40 @@ export function VoltixLogo({
 
   return (
     <span
-      className={`voltix-logo-root ${glow ? "voltix-logo-glow" : ""} ${className}`}
+      className={`voltix-logo-root ${className}`}
       aria-label="VoltIX"
     >
-      {/* ── Icon mark ── */}
-      <span className="voltix-icon" style={{ width: size, height: size, borderRadius: r }}>
+      {/* ── Icon mark with Framer Motion glow pulse ── */}
+      <motion.span
+        className="voltix-icon"
+        style={{ width: size, height: size, borderRadius: r }}
+        animate={
+          glow
+            ? {
+                boxShadow: [
+                  "0 2px 14px rgba(124,58,237,0.55), 0 0 0 1px rgba(0,212,255,0.15)",
+                  "0 4px 28px rgba(0,212,255,0.65), 0 0 0 1px rgba(0,212,255,0.35)",
+                  "0 2px 20px rgba(124,58,237,0.60), 0 0 0 1px rgba(124,58,237,0.25)",
+                  "0 2px 14px rgba(124,58,237,0.55), 0 0 0 1px rgba(0,212,255,0.15)",
+                ],
+              }
+            : {}
+        }
+        transition={
+          glow
+            ? { duration: 4, repeat: Infinity, ease: "easeInOut" }
+            : {}
+        }
+        whileHover={
+          glow
+            ? {
+                scale: 1.08,
+                boxShadow: "0 6px 32px rgba(0,212,255,0.75), 0 0 0 1.5px rgba(0,212,255,0.5)",
+                transition: { type: "spring", stiffness: 400, damping: 20 },
+              }
+            : { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 20 } }
+        }
+      >
         <svg
           width={size - pad * 2}
           height={size - pad * 2}
@@ -63,7 +94,7 @@ export function VoltixLogo({
             </radialGradient>
           </defs>
         </svg>
-      </span>
+      </motion.span>
 
       {/* ── Wordmark ── */}
       {showText && (
@@ -90,11 +121,10 @@ export function VoltixLogo({
           align-items: center;
           justify-content: center;
           background: linear-gradient(135deg, #7c3aed 0%, #1a6fff 55%, #00d4ff 100%);
-          box-shadow: 0 2px 14px rgba(124, 58, 237, 0.5), 0 0 0 1px rgba(0,212,255,0.15);
           flex-shrink: 0;
-          transition: box-shadow 0.25s, transform 0.25s;
           position: relative;
           overflow: hidden;
+          cursor: pointer;
         }
 
         /* Inner shimmer layer */
@@ -102,13 +132,8 @@ export function VoltixLogo({
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%);
+          background: linear-gradient(135deg, rgba(255,255,255,0.20) 0%, transparent 55%);
           pointer-events: none;
-        }
-
-        .voltix-logo-glow:hover .voltix-icon {
-          box-shadow: 0 4px 24px rgba(124, 58, 237, 0.75), 0 0 0 1px rgba(0,212,255,0.3);
-          transform: scale(1.06);
         }
 
         .voltix-wordmark {

@@ -440,7 +440,7 @@ export function CatalogTable({ items, onRefresh }: Props) {
           flex-wrap: wrap; margin-bottom: 16px;
         }
         .ct-count { font-size: 12px; color: var(--text-muted); }
-        .ct-table-wrap { max-height: calc(100vh - 280px); }
+        .ct-table-wrap { max-height: calc(100vh - 240px); }
         .add-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .form-field { display: flex; flex-direction: column; gap: 4px; }
         .field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
@@ -549,7 +549,6 @@ function EditableCell({ id, field, value, editing, onStart, onChange, onCommit, 
         color:      mono ? "var(--cyan)" : undefined,
         textAlign:  align || "left",
         display: "block",
-        cursor: "text",
       }}
     >
       {prefix && <span style={{color:"var(--text-muted)"}}>{prefix}</span>}
