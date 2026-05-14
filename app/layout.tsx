@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Providers } from "./providers";
 import { NavSignOut } from "@/components/NavSignOut";
 import { VoltixLogo } from "@/components/VoltixLogo";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { MeshNetwork } from "@/components/MeshNetwork";
 import { FullscreenToggle } from "@/components/FullscreenToggle";
 import "./globals.css";
 
@@ -19,8 +19,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>
-          {/* ── Aurora animated background — z:-10, pointer-events:none ── */}
-          <AnimatedBackground />
+          {/* ── Network Mesh background — z:0, pointer-events:none ── */}
+          <MeshNetwork />
 
           {/* ── Glassmorphic floating header ── */}
           <header className="nav-bar">
@@ -199,11 +199,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             border-color: rgba(0,0,0,0.10);
           }
 
-          /* ── Main content pushed below floating header ── */
+          /* ── Main content pushed below floating header, above aurora orbs ── */
           .main-content {
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 1;          /* sits above aurora (z:0), below header (z:50) */
             padding-top: 86px;   /* 54px header + 14px gap + 18px breathing room */
           }
         `}</style>
