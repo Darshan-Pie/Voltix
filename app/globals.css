@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@600;700;800;900&display=swap');
 
 /* ─── Design Tokens — Dark (default) ────────────────────────────── */
 :root {
@@ -478,3 +478,63 @@ tbody td {
   transition: opacity 0.15s;
 }
 .editable-cell:hover .edit-hint { opacity: 0.6; }
+
+/* ─── Auth Utility Bar (theme + fullscreen pill on login/register) ── */
+#auth-utility-bar {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 18px;
+
+  /* Dark mode (default) — deep-space glass */
+  background: rgba(8, 8, 20, 0.60);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 0.5px rgba(124, 58, 237, 0.15);
+}
+
+/* Light mode — frosted white glass */
+[data-theme="light"] #auth-utility-bar {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.10),
+    0 1px 0 rgba(255, 255, 255, 0.90) inset,
+    0 0 0 0.5px rgba(109, 40, 217, 0.08);
+}
+
+/* ─── nav-signout-btn light-mode hover correction ─────────────────── */
+/* In dark mode the red tint hover is fine; in light mode we use a     */
+/* neutral translucent gray so it blends with the white nav bar.        */
+[data-theme="light"] .nav-signout-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.14);
+  color: var(--text);
+}
+[data-theme="light"] #btn-fullscreen:hover {
+  background: rgba(0, 153, 204, 0.08);
+  border-color: rgba(0, 153, 204, 0.22);
+  color: var(--cyan);
+}
+
+/* ─── Nav logo colour isolation ──────────────────────────────────── */
+/* Browsers override body color for <a> tags (visited = purple,      */
+/* unvisited = blue). This forces the VoltixLogo's currentColor to   */
+/* always match the theme text token, not the UA stylesheet.         */
+#nav-logo,
+#nav-logo:visited,
+#nav-logo:hover,
+#nav-logo:active {
+  color: var(--text);
+  text-decoration: none;
+}
+

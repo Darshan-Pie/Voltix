@@ -404,7 +404,7 @@ export default function LoginPage() {
           >
             {/* Logo */}
             <motion.div className="sp-logo" variants={itemVariants}>
-              <VoltixLogo size={38} textSize={22} glow />
+              <VoltixLogo size={38} glow />
             </motion.div>
 
             {/* Headline */}
@@ -471,7 +471,7 @@ export default function LoginPage() {
                 style={{ display: "block" }}
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
               >
-                <VoltixLogo size={44} textSize={26} />
+                <VoltixLogo size={44} />
               </motion.div>
 
               {/* Heading */}

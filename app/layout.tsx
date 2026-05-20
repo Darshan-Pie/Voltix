@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Providers } from "./providers";
-import { NavSignOut } from "@/components/NavSignOut";
-import { VoltixLogo } from "@/components/VoltixLogo";
 import { MeshNetwork } from "@/components/MeshNetwork";
-import { FullscreenToggle } from "@/components/FullscreenToggle";
+import { ConditionalNav } from "@/components/ConditionalNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,52 +18,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* ── Network Mesh background — z:0, pointer-events:none ── */}
           <MeshNetwork />
 
-          {/* ── Glassmorphic floating header ── */}
-          <header className="nav-bar">
-            <div className="nav-inner">
-              {/* VoltIX Logo */}
-              <Link href="/" id="nav-logo" style={{ textDecoration: "none" }}>
-                <VoltixLogo size={34} textSize={19} glow />
-              </Link>
-
-              {/* Nav links */}
-              <nav className="nav-links">
-                <Link href="/catalog" className="nav-link" id="nav-catalog">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M4 5h6M4 7.5h6M4 10h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  Catalog
-                </Link>
-                <Link href="/bom" className="nav-link" id="nav-bom">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 2h10v10H2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M5 5l4 4M9 5l-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  BOM Pricing
-                </Link>
-                <Link href="/aggregation" className="nav-link" id="nav-aggregation">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 4h4M2 7h4M2 10h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M8 4h4M8 7h4M8 10h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M6 7h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  BOM Aggregation
-                </Link>
-              </nav>
-
-              {/* Right side controls */}
-              <div className="nav-right">
-                <div className="nav-status">
-                  <span className="dot dot-success" style={{width:6, height:6}} />
-                  <span>SQLite Ready</span>
-                </div>
-                <ThemeToggle />
-                <FullscreenToggle />
-                <NavSignOut />
-              </div>
-            </div>
-          </header>
+          {/* ── Glassmorphic floating header — hidden on auth pages ── */}
+          <ConditionalNav />
 
           <main className="main-content">
             {children}

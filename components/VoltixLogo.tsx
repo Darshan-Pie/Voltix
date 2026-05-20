@@ -3,152 +3,268 @@
 import { motion } from "framer-motion";
 
 /**
- * VoltixLogo — SVG-based scalable brand mark with Framer Motion glow pulse.
- * Props:
- *   size     — controls the icon box size (default 36)
- *   textSize — font-size for the wordmark (default 20)
- *   showText — whether to render "VoltIX" wordmark (default true)
- *   className — extra class on the root wrapper
- *   glow     — if true, adds a continuous Framer Motion glow pulse on the icon
+ * VoltixLogo — Advanced SVG wordmark: V O(circuit) L T I(bolt) X
+ *
+ * Intrinsic canvas: 292 × 72  (aspect ≈ 4.06 : 1)
+ * Rendered height is controlled by the `size` prop; width scales proportionally.
+ *
+ * ── Letter strategy ────────────────────────────────────────────────────────
+ * V, O, L, T, X  →  individual <text> elements, each with a forced `textLength`
+ *   attribute. This makes their widths deterministic regardless of whether
+ *   BankGothic, Orbitron, or system-ui is the font that actually loads,
+ *   so the circuit-O overlay and bolt-I position are always pixel-perfect.
+ *   All use fill="currentColor" → white in dark mode, black in light mode.
+ *
+ * Circuit 'O'  →  standard text "O" plus a cyan overlay group (diagonal arm
+ *   with end-nodes and a centre dot) drawn on top. Glow filter applied only
+ *   to the cyan elements so the O letterform stays sharp.
+ *
+ * Lightning 'I'  →  custom <path> zigzag bolt between T and X.
+ *   Filled with a top→bottom cyan-to-violet linearGradient. Never currentColor.
+ *   A wider horizontal slash parallelogram (also gradient-filled) cuts across
+ *   the bolt, pointing leftward toward T.
+ *
+ * Props
+ *   size      — rendered height in px (width auto-scales, default 34)
+ *   glow      — enable Framer Motion drop-shadow keyframe pulse
+ *   className — forwarded to the root <span>
+ *   showText, textSize — legacy no-ops for call-site compat
  */
 
 interface VoltixLogoProps {
   size?: number;
-  textSize?: number;
-  showText?: boolean;
   className?: string;
   glow?: boolean;
+  /** @deprecated no-op */
+  showText?: boolean;
+  /** @deprecated no-op */
+  textSize?: number;
 }
 
+// ── Intrinsic canvas dimensions ───────────────────────────────────────────────
+const VW = 292;  // viewBox width
+const VH = 72;   // viewBox height
+
+// ── Typography ────────────────────────────────────────────────────────────────
+// BankGothic is commercial; Orbitron is the loaded web-font fallback (imported
+// in globals.css). system-ui catches everything else.
+const FONT = "BankGothic, 'Bank Gothic', 'Orbitron', system-ui, sans-serif";
+const FS   = 62;   // font-size (viewBox units)
+const FW   = 900;  // font-weight
+const BY   = 57;   // baseline y
+
+// ── Letter positions (x) and forced widths (textLength) ───────────────────────
+// Using textLength makes glyph advance deterministic across all font fallbacks.
+//   Letter  x    textLength   ends-at
+//   V       4    44           48
+//   O      51    48           99   ← circuit overlay centred here
+//   L     103    40          143
+//   T     145    44          189
+//   [I bolt spans ≈ 193–211, centre 202]
+//   X     215    44          259
+//   (right margin 292-259 = 33px to balance left margin + bolt gap)
+
+const LETTERS = [
+  { ch: "V", x:   4, tl: 44 },
+  { ch: "O", x:  51, tl: 48 },  // ← O centre-x = 51 + 48/2 = 75
+  { ch: "L", x: 103, tl: 40 },
+  { ch: "T", x: 145, tl: 44 },
+  { ch: "X", x: 215, tl: 44 },
+] as const;
+
+// ── Circuit O overlay (all coordinates in viewBox space) ──────────────────────
+const OCX = 75;   // centre-x of the O letter  (51 + 48/2)
+const OCY = 35;   // centre-y of the O letter  (visual centre of cap)
+const OIR = 4.5;  // inner / centre node radius
+const OOR = 3.5;  // outer node radius
+const OAR = 22;   // arm reach from centre (stays inside the O's counter)
+
+//  45° unit vector:  cos(45°) = sin(45°) = √½ ≈ 0.7071
+const D    = Math.SQRT1_2;
+//  Top-right end-node
+const ETX  = Math.round(OCX + OAR * D);   // 91
+const ETY  = Math.round(OCY - OAR * D);   // 19
+//  Bottom-left end-node
+const EBX  = Math.round(OCX - OAR * D);   // 59
+const EBY  = Math.round(OCY + OAR * D);   // 51
+//  Arm starts at inner-node edge (not dead-centre, avoids drawing over the dot)
+const ASR  = OIR + 1;   // arm-start radius = inner-node edge + 1 px gap
+const AS1X = Math.round(OCX + ASR * D);   // 79
+const AS1Y = Math.round(OCY - ASR * D);   // 31
+const AS2X = Math.round(OCX - ASR * D);   // 71
+const AS2Y = Math.round(OCY + ASR * D);   // 39
+
+// ── Lightning bolt 'I' (userSpaceOnUse, matched to FS=62 cap height) ─────────
+// Bolt occupies x 193–212, y 7–65. Width ≈ 19 px, height ≈ 58 px.
+// Classic 2-kink zigzag: upper arm tilts left, lower arm tilts left.
+const BOLT = [
+  "M 208  7",  // top-right
+  "L 196 36",  // mid-left (upper half ends)
+  "L 203 36",  // right kink
+  "L 192 65",  // bottom-left
+  "L 204 43",  // lower-right
+  "L 211 43",  // outer-right kink
+  "Z",
+].join(" ");
+
+// Horizontal slash — narrow parallelogram pointing leftward toward T.
+// Tip sits at x≈191 (2 px clear of T's right edge at 189).
+// The gradient fades from opaque cyan on the right to transparent on the left,
+// so it "fades into" the T without hard clipping.
+const SLASH = "M 212 20  L 192 12  L 189 24  L 209 32  Z";
+
+// ── Brand colours ─────────────────────────────────────────────────────────────
+const CYAN   = "#00E5FF";
+const BLUE   = "#3B82F6";
+const VIOLET = "#7C3AED";
+
+// ── Component ─────────────────────────────────────────────────────────────────
 export function VoltixLogo({
-  size = 36,
-  textSize = 20,
-  showText = true,
+  size      = 34,
   className = "",
-  glow = false,
+  glow      = false,
 }: VoltixLogoProps) {
-  const pad = size * 0.22;
-  const r = size * 0.25;
+  const renderedWidth = Math.round((size / VH) * VW);
+
+  const glowAnimate = glow
+    ? {
+        filter: [
+          "drop-shadow(0 0 2px rgba(0,229,255,0.25)) drop-shadow(0 0 1px rgba(124,58,237,0.15))",
+          "drop-shadow(0 0 9px rgba(0,229,255,0.65)) drop-shadow(0 0 3px rgba(124,58,237,0.20))",
+          "drop-shadow(0 0 6px rgba(124,58,237,0.55)) drop-shadow(0 0 2px rgba(0,229,255,0.20))",
+          "drop-shadow(0 0 2px rgba(0,229,255,0.25)) drop-shadow(0 0 1px rgba(124,58,237,0.15))",
+        ],
+      }
+    : {};
 
   return (
-    <span
+    <motion.span
       className={`voltix-logo-root ${className}`}
-      aria-label="VoltIX"
+      aria-label="VOLTIX"
+      style={{ display: "inline-flex", alignItems: "center" }}
+      animate={glowAnimate}
+      transition={glow ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
+      whileHover={{
+        filter: glow
+          ? "drop-shadow(0 0 14px rgba(0,229,255,0.80)) drop-shadow(0 0 5px rgba(124,58,237,0.40))"
+          : "drop-shadow(0 0 5px rgba(0,229,255,0.40))",
+        transition: { type: "spring", stiffness: 380, damping: 20 },
+      }}
     >
-      {/* ── Icon mark with Framer Motion glow pulse ── */}
-      <motion.span
-        className="voltix-icon"
-        style={{ width: size, height: size, borderRadius: r }}
-        animate={
-          glow
-            ? {
-                boxShadow: [
-                  "0 2px 14px rgba(124,58,237,0.55), 0 0 0 1px rgba(0,212,255,0.15)",
-                  "0 4px 28px rgba(0,212,255,0.65), 0 0 0 1px rgba(0,212,255,0.35)",
-                  "0 2px 20px rgba(124,58,237,0.60), 0 0 0 1px rgba(124,58,237,0.25)",
-                  "0 2px 14px rgba(124,58,237,0.55), 0 0 0 1px rgba(0,212,255,0.15)",
-                ],
-              }
-            : {}
-        }
-        transition={
-          glow
-            ? { duration: 4, repeat: Infinity, ease: "easeInOut" }
-            : {}
-        }
-        whileHover={
-          glow
-            ? {
-                scale: 1.08,
-                boxShadow: "0 6px 32px rgba(0,212,255,0.75), 0 0 0 1.5px rgba(0,212,255,0.5)",
-                transition: { type: "spring", stiffness: 400, damping: 20 },
-              }
-            : { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 20 } }
-        }
+      <svg
+        width={renderedWidth}
+        height={size}
+        viewBox={`0 0 ${VW} ${VH}`}
+        fill="none"
+        aria-hidden="true"
+        style={{ display: "block", overflow: "visible" }}
       >
-        <svg
-          width={size - pad * 2}
-          height={size - pad * 2}
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          {/* Lightning bolt — clean sharp "V" geometry */}
-          <path
-            d="M14 2L5.5 14H11.5L10 22L20.5 10H14.5L14 2Z"
-            fill="url(#vx-grad)"
+        <defs>
+          {/*
+           * Neon glow applied only to the cyan circuit-O elements.
+           * Keeping it off the letterforms preserves their crisp edges.
+           */}
+          <filter id="vx-circuit-glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.0" result="blurred" />
+            <feMerge>
+              <feMergeNode in="blurred" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/*
+           * Stronger glow for the I-bolt. Larger stdDeviation gives the
+           * bolt a more electric, high-voltage feel.
+           */}
+          <filter id="vx-bolt-glow" x="-80%" y="-50%" width="260%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.0" result="blurred" />
+            <feMerge>
+              <feMergeNode in="blurred" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/*
+           * Bolt fill — top-to-bottom in userSpaceOnUse so the gradient
+           * tracks the actual bolt geometry (y 7 → y 65).
+           */}
+          <linearGradient id="vx-bolt-grad" x1="202" y1="7" x2="200" y2="65"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0"    stopColor={CYAN}   />
+            <stop offset="0.55" stopColor={BLUE}   />
+            <stop offset="1"    stopColor={VIOLET} />
+          </linearGradient>
+
+          {/*
+           * Slash fill — left-to-right, fading from opaque at the right tip
+           * to transparent at the left, so it dissolves toward T gracefully.
+           */}
+          <linearGradient id="vx-slash-grad" x1="212" y1="22" x2="189" y2="22"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0"   stopColor={CYAN}              />
+            <stop offset="0.6" stopColor={CYAN} stopOpacity="0.50" />
+            <stop offset="1"   stopColor={CYAN} stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            Standard letters: V  O  L  T  X
+            Each uses fill="currentColor" — resolved by the #nav-logo CSS
+            rule to var(--text) so it is always white/black per theme,
+            never the browser's default link purple.
+            textLength forces consistent advance widths across all fonts.
+            ═══════════════════════════════════════════════════════════════ */}
+        {LETTERS.map(({ ch, x, tl }) => (
+          <text
+            key={ch}
+            x={x}
+            y={BY}
+            fontFamily={FONT}
+            fontWeight={FW}
+            fontSize={FS}
+            textLength={tl}
+            lengthAdjust="spacingAndGlyphs"
+            fill="currentColor"
+          >
+            {ch}
+          </text>
+        ))}
+
+        {/* ═══════════════════════════════════════════════════════════════
+            Circuit O overlay
+            Sits directly on top of the "O" text element.
+            Only the cyan elements carry the glow filter — the text O
+            itself stays sharp underneath.
+            ═══════════════════════════════════════════════════════════════ */}
+        <g filter="url(#vx-circuit-glow)">
+          {/* Diagonal arm — bottom-left to top-right */}
+          <line
+            x1={EBX} y1={EBY}
+            x2={ETX} y2={ETY}
+            stroke={CYAN}
+            strokeWidth="1.8"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
-          {/* Small electrical node dot */}
-          <circle cx="18.5" cy="7.5" r="1.5" fill="url(#vx-dot)" opacity="0.7" />
-          <defs>
-            <linearGradient id="vx-grad" x1="5" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#00eeff" />
-              <stop offset="0.55" stopColor="#4f8ef7" />
-              <stop offset="1" stopColor="#7c3aed" />
-            </linearGradient>
-            <radialGradient id="vx-dot" cx="50%" cy="50%" r="50%">
-              <stop stopColor="#00eeff" />
-              <stop offset="1" stopColor="#7c3aed" />
-            </radialGradient>
-          </defs>
-        </svg>
-      </motion.span>
+          {/* Centre node */}
+          <circle cx={OCX} cy={OCY} r={OIR} fill={CYAN} />
+          {/* Top-right outer node */}
+          <circle cx={ETX} cy={ETY} r={OOR} fill={CYAN} />
+          {/* Bottom-left outer node */}
+          <circle cx={EBX} cy={EBY} r={OOR} fill={CYAN} />
+        </g>
 
-      {/* ── Wordmark ── */}
-      {showText && (
-        <span
-          className="voltix-wordmark"
-          style={{ fontSize: textSize, letterSpacing: "-0.04em", lineHeight: 1 }}
-        >
-          <span className="voltix-volt">Volt</span>
-          <span className="voltix-ix">IX</span>
-        </span>
-      )}
-
-      <style>{`
-        .voltix-logo-root {
-          display: inline-flex;
-          align-items: center;
-          gap: ${size * 0.28}px;
-          text-decoration: none;
-          user-select: none;
-        }
-
-        .voltix-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #7c3aed 0%, #1a6fff 55%, #00d4ff 100%);
-          flex-shrink: 0;
-          position: relative;
-          overflow: hidden;
-          cursor: pointer;
-        }
-
-        /* Inner shimmer layer */
-        .voltix-icon::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.20) 0%, transparent 55%);
-          pointer-events: none;
-        }
-
-        .voltix-wordmark {
-          font-family: 'Inter', system-ui, sans-serif;
-          font-weight: 800;
-          display: inline-flex;
-          align-items: baseline;
-          gap: 0;
-        }
-        .voltix-volt { color: #00d4ff; }
-        .voltix-ix   { color: var(--text, #eeeef8); }
-
-        [data-theme="light"] .voltix-volt { color: #0077aa; }
-        [data-theme="light"] .voltix-ix   { color: var(--text, #111120); }
-      `}</style>
-    </span>
+        {/* ═══════════════════════════════════════════════════════════════
+            Lightning bolt I
+            Custom path — never uses currentColor, always gradient-filled.
+            The slash parallelogram sits on top with its own gradient.
+            ═══════════════════════════════════════════════════════════════ */}
+        <g filter="url(#vx-bolt-glow)">
+          {/* Vertical zigzag bolt */}
+          <path d={BOLT} fill="url(#vx-bolt-grad)" />
+          {/* Horizontal slash pointing left toward T */}
+          <path d={SLASH} fill="url(#vx-slash-grad)" />
+        </g>
+      </svg>
+    </motion.span>
   );
 }
