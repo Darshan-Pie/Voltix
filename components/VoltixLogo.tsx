@@ -57,8 +57,10 @@ const FS   = 62;
 const FW   = 600;  // semi-bold — matches optical weight of the diagonal V strokes
 const BY   = 57;  // baseline y
 
-// ── Brand colours ─────────────────────────────────────────────────────────────
-const CYAN = "#00E5FF";  // only colour used for accent elements
+// ── Brand colours ─────────────────────────────────────────────────────────
+const CYAN   = "#00E5FF";
+const BLUE   = "#3B82F6";
+const VIOLET = "#7C3AED";
 
 // ── V-Spark bolt geometry ─────────────────────────────────────────────────────
 // A small, discrete lightning bolt overlaid on the LOWER portion of the V's
@@ -91,14 +93,19 @@ const ETY = Math.round(OCY - OAR * D);  // 19
 const EBX = Math.round(OCX - OAR * D);  // 59  bottom-left outer node
 const EBY = Math.round(OCY + OAR * D);  // 51
 
-// ── 'I' slash geometry ──────────────────────────────────────────────────────────────
-// A forward-leaning parallelogram — same lean angle as V_BOLT_PATH.
-// V bolt lean rate: 11 left / 32 down = 0.344 per unit.
-// Scaled to full cap height (52 units): 52 × 0.344 ≈ 18 units total lean.
-// Width: 8 units (matches V bolt mid-step width of 7–8 units).
-// Sits cleanly between T (ends x≈189) and X (starts x=215).
-// Solid #00E5FF fill. Zero filters. Zero gradients.
-const I_SLASH = "M 210 5 L 202 5 L 192 57 L 200 57 Z";
+// ── 'I' bolt geometry ─────────────────────────────────────────────────────────
+// Exact same 4-point self-intersecting bolt technique as V_BOLT_PATH,
+// scaled by ×1.625 (52÷32) to span the full cap height y=5–57.
+//
+//  V_BOLT_PATH geometry → I_BOLT geometry (scale factor 1.625):
+//   Upper arm  Δx=−10, Δy=18  →  Δx=−16, Δy=29   (lean ratio 0.552 vs 0.556)
+//   Kink step  +7            →  +11               (7 × 1.625 = 11.375)
+//   Lower arm  Δx=−8, Δy=14  →  Δx=−13, Δy=23   (lean ratio 0.565 vs 0.571)
+//
+//  Closing line from (192,57)→(210,5) crosses the kink segment at x≈200 (∈ 194–205) ✓
+//  Sits cleanly between T (ends x≈189) and X (starts x=215). Gap: 3–5 units each side.
+//
+const I_BOLT = "M 210 5 L 194 34 L 205 34 L 192 57 Z";
 
 // ── Easing / timing ───────────────────────────────────────────────────────────
 const EXPAND_TRANSITION = { duration: 0.28, ease: [0.23, 1, 0.32, 1] as const };
@@ -177,8 +184,7 @@ export function VoltixLogo({
           style={{ display: "block" }}
         >
           <defs>
-            {/* Glow for circuit O cyan elements only.
-                 The V bolt and I slash are flat solid cyan with zero filters. */}
+            {/* Soft glow for the circuit-O cyan arm and nodes */}
             <filter id="vx-circuit-glow" x="-80%" y="-80%" width="260%" height="260%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2.0" result="b" />
               <feMerge>
@@ -186,6 +192,24 @@ export function VoltixLogo({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+
+            {/* V bolt gradient — tracks the bolt's own diagonal (top-right→bottom-left) */}
+            <linearGradient id="vx-v-grad"
+              x1="47" y1="33" x2="36" y2="65"
+              gradientUnits="userSpaceOnUse">
+              <stop offset="0"    stopColor={CYAN}   />
+              <stop offset="0.55" stopColor={BLUE}   />
+              <stop offset="1"    stopColor={VIOLET} />
+            </linearGradient>
+
+            {/* I bolt gradient — same direction, scaled to cap height */}
+            <linearGradient id="vx-i-grad"
+              x1="210" y1="5" x2="192" y2="57"
+              gradientUnits="userSpaceOnUse">
+              <stop offset="0"    stopColor={CYAN}   />
+              <stop offset="0.55" stopColor={BLUE}   />
+              <stop offset="1"    stopColor={VIOLET} />
+            </linearGradient>
           </defs>
 
           {/* ════════════════════════════════════════════════════════════════
@@ -197,11 +221,8 @@ export function VoltixLogo({
           {/* V letter — standard text, currentColor */}
           <text x="4" y={BY} {...tp} textLength={44}>V</text>
 
-          {/* Cyan lightning bolt — solid flat #00E5FF, zero filters, zero gradients.
-               Rendered on top of (after) the V text so it is always visible.
-               The bolt sits in the lower-right inner area of the V arm,
-               matching the reference icon geometry. */}
-          <path d={V_BOLT_PATH} fill={CYAN} />
+          {/* V bolt — gradient fill, rendered on top of V text */}
+          <path d={V_BOLT_PATH} fill="url(#vx-v-grad)" />
 
           {/* ════════════════════════════════════════════════════════════════
               OLTIX EXPANSION GROUP
@@ -240,10 +261,10 @@ export function VoltixLogo({
             {/* ── T ───────────────────────────────────────────── */}
             <text x="145" y={BY} {...tp} textLength={44}>T</text>
 
-            {/* ── I (forward-leaning slash) ────────────────────
-                 Same lean angle as V_BOLT_PATH. Solid flat cyan.
-                 Zero filters. Zero gradients. */}
-            <path d={I_SLASH} fill={CYAN} />
+            {/* ── I (4-point bolt — matches V_BOLT_PATH geometry exactly) ───
+                 Scaled ×1.625 to span full cap height. Same lean angles.
+                 Gradient direction tracks the bolt's own diagonal. */}
+            <path d={I_BOLT} fill="url(#vx-i-grad)" />
 
             {/* ── X ───────────────────────────────────────────── */}
             <text x="215" y={BY} {...tp} textLength={44}>X</text>
