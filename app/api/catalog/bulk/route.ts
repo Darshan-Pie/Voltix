@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     await prisma.$transaction(
-      matching.map((item) => {
+      matching.map((item: { id: string; listPrice: number }) => {
         const netPrice = computeNetPrice(item.listPrice, Number(discountPercent));
         return prisma.componentPrice.update({
           where: { id: item.id },
