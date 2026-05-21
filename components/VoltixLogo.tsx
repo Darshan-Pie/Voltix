@@ -62,36 +62,22 @@ const CYAN   = "#00E5FF";
 const BLUE   = "#3B82F6";
 const VIOLET = "#7C3AED";
 
-// ── V-Spark geometry ──────────────────────────────────────────────────────────
-// The V letter sits at x=4, textLength=44, so it occupies x 4–48 in viewBox.
-// The cyan spark accent traces the inner right-arm channel of the V:
-//   upper tip  → first kink right → second kink left → lower tip near centre
-// These coordinates were measured against the Orbitron "V" glyph at FS=62.
+// ── V-Spark bolt geometry ─────────────────────────────────────────────────────
+// A small, discrete lightning bolt overlaid on the LOWER portion of the V's
+// right arm — matching the reference icon where the bolt is a compact accent
+// at the inner-lower-right of the V, not a full-arm overlay.
 //
-//  Spark path (fills the inner-right wedge of the V):
-//    Start: top of right inner arm  ≈ (36, 6)
-//    Kink right (bolt elbow):        (44, 30)
-//    Kink back left:                 (38, 30)
-//    End: near bottom point:         (25, 57)
-//    (left edge of spark)            (22, 57) → (34, 6) close
+// Uses the standard 4-point self-intersecting bolt technique:
+//   M top-right → L mid-left → L mid-kink-right → L bottom-left → Z
+// The closing segment from bottom-left back to top-right crosses the
+// horizontal kink-segment, creating the bolt silhouette under SVG's default
+// non-zero fill rule.
 //
-const V_SPARK_PATH = [
-  "M 36  6",   // top-right of inner arm
-  "L 45 31",   // jag out right (elbow of bolt)
-  "L 39 31",   // kink back left
-  "L 26 57",   // bottom-left (near V tip)
-  "L 22 57",   // very bottom of V centre
-  "L 34  6",   // back up to inner-arm top-left
-  "Z",
-].join(" ");
-
-// Tiny highlight at the top of the bolt — a small triangle "spark head"
-const V_SPARK_HEAD = [
-  "M 38  4",
-  "L 46 16",
-  "L 41 12",
-  "Z",
-].join(" ");
+//  Bolt bounding box:  x = 36–47,  y = 33–65
+//  At size=34 (scale ≈ 0.472):    x ≈ 17–22px,  y ≈ 15.6–30.7px
+//  (lower-right quadrant of the collapsed icon)
+//
+const V_BOLT_PATH = "M 47 33 L 37 51 L 44 51 L 36 65 Z";
 
 // ── Circuit O overlay geometry ────────────────────────────────────────────────
 // O text sits at x=51, textLength=48 → centre-x = 51+24 = 75, centre-y = 35
@@ -235,9 +221,11 @@ export function VoltixLogo({
           {/* V letter — standard text, currentColor */}
           <text x="4" y={BY} {...tp} textLength={44}>V</text>
 
-          {/* Cyan spark accent — flat solid cyan, no blur, razor-sharp */}
-          <path d={V_SPARK_PATH} fill={CYAN} />
-          <path d={V_SPARK_HEAD} fill={CYAN} />
+          {/* Cyan lightning bolt — solid flat #00E5FF, zero filters, zero gradients.
+               Rendered on top of (after) the V text so it is always visible.
+               The bolt sits in the lower-right inner area of the V arm,
+               matching the reference icon geometry. */}
+          <path d={V_BOLT_PATH} fill={CYAN} />
 
           {/* ════════════════════════════════════════════════════════════════
               OLTIX EXPANSION GROUP
