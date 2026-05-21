@@ -83,8 +83,8 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      makes: makes.map((m) => m.make),
-      categories: categories.map((c) => c.category),
+      makes: makes.map((m: { make: string }) => m.make),
+      categories: categories.map((c: { category: string }) => c.category),
     });
   } catch (error) {
     console.error("[GET /api/catalog/bulk]", error);
