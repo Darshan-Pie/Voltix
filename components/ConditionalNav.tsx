@@ -30,8 +30,22 @@ export function ConditionalNav() {
     <>
       <header className="nav-bar">
         <div className="nav-inner">
-          {/* VoltIX Logo */}
-          <Link href="/" id="nav-logo" style={{ textDecoration: "none" }}>
+          {/* VoltIX Logo — flex-shrink:0 prevents the expanding logo from
+              squeezing the nav links. overflow:visible lets the logo grow
+              beyond the link's own bounding box. color:var(--text) is the
+              inline override for the browser's UA link-colour stylesheet
+              (belt-and-suspenders on top of the globals.css rule). */}
+          <Link
+            href="/"
+            id="nav-logo"
+            style={{
+              textDecoration: "none",
+              color:          "var(--text)",
+              flexShrink:     0,
+              display:        "flex",
+              alignItems:     "center",
+            }}
+          >
             <VoltixLogo size={34} glow />
           </Link>
 
