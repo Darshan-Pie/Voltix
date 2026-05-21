@@ -54,13 +54,11 @@ const ICON_VW  = 54;    // viewBox width for the V-Spark icon alone
 // ── Typography ────────────────────────────────────────────────────────────────
 const FONT = "BankGothic, 'Bank Gothic', 'Orbitron', system-ui, sans-serif";
 const FS   = 62;
-const FW   = 900;
+const FW   = 600;  // semi-bold — matches optical weight of the diagonal V strokes
 const BY   = 57;  // baseline y
 
 // ── Brand colours ─────────────────────────────────────────────────────────────
-const CYAN   = "#00E5FF";
-const BLUE   = "#3B82F6";
-const VIOLET = "#7C3AED";
+const CYAN = "#00E5FF";  // only colour used for accent elements
 
 // ── V-Spark bolt geometry ─────────────────────────────────────────────────────
 // A small, discrete lightning bolt overlaid on the LOWER portion of the V's
@@ -93,10 +91,14 @@ const ETY = Math.round(OCY - OAR * D);  // 19
 const EBX = Math.round(OCX - OAR * D);  // 59  bottom-left outer node
 const EBY = Math.round(OCY + OAR * D);  // 51
 
-// ── Lightning bolt 'I' ────────────────────────────────────────────────────────
-// Sits between T (ends ≈ 189) and X (starts 215). Spans x 193–212, y 7–65.
-const BOLT  = "M 208 7 L 196 36 L 203 36 L 192 65 L 204 43 L 211 43 Z";
-const SLASH = "M 212 20 L 192 12 L 189 24 L 209 32 Z";
+// ── 'I' slash geometry ──────────────────────────────────────────────────────────────
+// A forward-leaning parallelogram — same lean angle as V_BOLT_PATH.
+// V bolt lean rate: 11 left / 32 down = 0.344 per unit.
+// Scaled to full cap height (52 units): 52 × 0.344 ≈ 18 units total lean.
+// Width: 8 units (matches V bolt mid-step width of 7–8 units).
+// Sits cleanly between T (ends x≈189) and X (starts x=215).
+// Solid #00E5FF fill. Zero filters. Zero gradients.
+const I_SLASH = "M 210 5 L 202 5 L 192 57 L 200 57 Z";
 
 // ── Easing / timing ───────────────────────────────────────────────────────────
 const EXPAND_TRANSITION = { duration: 0.28, ease: [0.23, 1, 0.32, 1] as const };
@@ -175,7 +177,8 @@ export function VoltixLogo({
           style={{ display: "block" }}
         >
           <defs>
-            {/* Glow for circuit O cyan elements */}
+            {/* Glow for circuit O cyan elements only.
+                 The V bolt and I slash are flat solid cyan with zero filters. */}
             <filter id="vx-circuit-glow" x="-80%" y="-80%" width="260%" height="260%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2.0" result="b" />
               <feMerge>
@@ -183,33 +186,6 @@ export function VoltixLogo({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Glow for the I-bolt */}
-            <filter id="vx-bolt-glow" x="-80%" y="-50%" width="260%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3.0" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Cyan→Blue→Violet gradient for the I-bolt only */}
-            <linearGradient id="vx-bolt-grad"
-              x1="202" y1="7" x2="200" y2="65"
-              gradientUnits="userSpaceOnUse">
-              <stop offset="0"    stopColor={CYAN}   />
-              <stop offset="0.55" stopColor={BLUE}   />
-              <stop offset="1"    stopColor={VIOLET} />
-            </linearGradient>
-
-            {/* Slash gradient — fades leftward toward T */}
-            <linearGradient id="vx-slash-grad"
-              x1="212" y1="22" x2="189" y2="22"
-              gradientUnits="userSpaceOnUse">
-              <stop offset="0"   stopColor={CYAN}                   />
-              <stop offset="0.6" stopColor={CYAN} stopOpacity="0.5" />
-              <stop offset="1"   stopColor={CYAN} stopOpacity="0.0" />
-            </linearGradient>
           </defs>
 
           {/* ════════════════════════════════════════════════════════════════
@@ -264,11 +240,10 @@ export function VoltixLogo({
             {/* ── T ───────────────────────────────────────────── */}
             <text x="145" y={BY} {...tp} textLength={44}>T</text>
 
-            {/* ── I (lightning bolt + slash) ───────────────────── */}
-            <g filter="url(#vx-bolt-glow)">
-              <path d={BOLT}  fill="url(#vx-bolt-grad)"  />
-              <path d={SLASH} fill="url(#vx-slash-grad)" />
-            </g>
+            {/* ── I (forward-leaning slash) ────────────────────
+                 Same lean angle as V_BOLT_PATH. Solid flat cyan.
+                 Zero filters. Zero gradients. */}
+            <path d={I_SLASH} fill={CYAN} />
 
             {/* ── X ───────────────────────────────────────────── */}
             <text x="215" y={BY} {...tp} textLength={44}>X</text>
