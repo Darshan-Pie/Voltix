@@ -186,15 +186,7 @@ export function VoltixLogo({
           viewBox={`0 0 ${FULL_VW} ${VH}`}
           fill="none"
           aria-hidden="true"
-          style={{
-            display: "block",
-            // Slight drop-shadow on hover — applied here since motion.span
-            // glow and hover glow are separate concerns
-            filter: isHovered
-              ? "drop-shadow(0 0 12px rgba(0,229,255,0.65))"
-              : undefined,
-            transition: "filter 0.2s ease",
-          }}
+          style={{ display: "block" }}
         >
           <defs>
             {/* Glow for circuit O cyan elements */}
@@ -215,16 +207,7 @@ export function VoltixLogo({
               </feMerge>
             </filter>
 
-            {/* Glow for the V-Spark accent */}
-            <filter id="vx-spark-glow" x="-80%" y="-60%" width="260%" height="220%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Cyan→Blue→Violet gradient for the I-bolt */}
+            {/* Cyan→Blue→Violet gradient for the I-bolt only */}
             <linearGradient id="vx-bolt-grad"
               x1="202" y1="7" x2="200" y2="65"
               gradientUnits="userSpaceOnUse">
@@ -241,15 +224,6 @@ export function VoltixLogo({
               <stop offset="0.6" stopColor={CYAN} stopOpacity="0.5" />
               <stop offset="1"   stopColor={CYAN} stopOpacity="0.0" />
             </linearGradient>
-
-            {/* V-Spark accent gradient — top (bright cyan) to bottom (blue) */}
-            <linearGradient id="vx-vspark-grad"
-              x1="36" y1="4" x2="26" y2="57"
-              gradientUnits="userSpaceOnUse">
-              <stop offset="0"   stopColor={CYAN} />
-              <stop offset="0.7" stopColor={BLUE} />
-              <stop offset="1"   stopColor={VIOLET} />
-            </linearGradient>
           </defs>
 
           {/* ════════════════════════════════════════════════════════════════
@@ -261,11 +235,9 @@ export function VoltixLogo({
           {/* V letter — standard text, currentColor */}
           <text x="4" y={BY} {...tp} textLength={44}>V</text>
 
-          {/* Cyan spark accent — overlaid on right-arm inner face */}
-          <g filter="url(#vx-spark-glow)">
-            <path d={V_SPARK_PATH} fill="url(#vx-vspark-grad)" />
-            <path d={V_SPARK_HEAD} fill={CYAN} opacity="0.90" />
-          </g>
+          {/* Cyan spark accent — flat solid cyan, no blur, razor-sharp */}
+          <path d={V_SPARK_PATH} fill={CYAN} />
+          <path d={V_SPARK_HEAD} fill={CYAN} />
 
           {/* ════════════════════════════════════════════════════════════════
               OLTIX EXPANSION GROUP
