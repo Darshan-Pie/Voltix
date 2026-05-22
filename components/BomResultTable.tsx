@@ -534,27 +534,27 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
 
       {/* ── Table ────────────────────────────────────────────────────── */}
       <div className="table-wrap brt-table-wrap">
-        <table id="bom-result-table" className="w-full table-fixed" style={{ width: "100%", tableLayout: "fixed" }}>
+        <table id="bom-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
           <thead>
             {/* ── Sort header row ── */}
             <tr>
-              <th style={{ width: "50px", textAlign: "center" }}>#</th>
+              <th style={{ width: 50, minWidth: 50, maxWidth: 50, textAlign: "center" }}>#</th>
               {([
-                ["description",   "Description",  "col-desc", "24%"],
-                ["qty",           "Qty",           "col-num",  "6%"],
-                ["unit",          "Unit",          "col-unit", "5%"],
-                ["make",          "Make",          "col-make", "8%"],
-                ["matchedCatalogNumber", "Cat. No.", "col-catno", "10%"],
-                ["category",      "Category",     "col-cat",  "8%"],
-                ["listPrice",     "List Price",    "col-num",  "8%"],
-                ["discountPercent","Disc %",       "col-num",  "6%"],
-                ["discountedRate", "Disc. Rate",   "col-num",  "8%"],
-                ["netAmount",     "Net Amount",    "col-num",  "9%"],
-              ] as [keyof PricedBomRow, string, string, string][]).map(([col, label, cls, w]) => (
+                ["description",   "Description",  "col-desc", 300],
+                ["qty",           "Qty",           "col-num",  80],
+                ["unit",          "Unit",          "col-unit", 80],
+                ["make",          "Make",          "col-make", 150],
+                ["matchedCatalogNumber", "Cat. No.", "col-catno", 150],
+                ["category",      "Category",     "col-cat",  150],
+                ["listPrice",     "List Price",    "col-num",  120],
+                ["discountPercent","Disc %",       "col-num",  120],
+                ["discountedRate", "Disc. Rate",   "col-num",  120],
+                ["netAmount",     "Net Amount",    "col-num",  120],
+              ] as [keyof PricedBomRow, string, string, number][]).map(([col, label, cls, w]) => (
                 <th
                   key={col}
                   className={`${cls} brt-th-sort`}
-                  style={{ width: w }}
+                  style={{ width: w, minWidth: w, maxWidth: w, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                   onClick={() => handleBrtSort(col)}
                   title={`Sort by ${label}`}
                 >
@@ -564,18 +564,18 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
                   </span>
                 </th>
               ))}
-              <th style={{ width: "8%" }}>Status</th>
+              <th style={{ width: 120, minWidth: 120, maxWidth: 120 }}>Status</th>
             </tr>
 
             {/* ── Column filter row ── */}
             <tr className="brt-filter-row">
-              <td />{/* # */}
+              <td style={{ width: 50, minWidth: 50, maxWidth: 50 }} />{/* # */}
               {([
-                "description", "qty", "unit", "make",
-                "matchedCatalogNumber", "category",
-                "listPrice", "discountPercent", "discountedRate", "netAmount",
-              ] as (keyof PricedBomRow)[]).map((col) => (
-                <td key={col}>
+                ["description", 300], ["qty", 80], ["unit", 80], ["make", 150],
+                ["matchedCatalogNumber", 150], ["category", 150],
+                ["listPrice", 120], ["discountPercent", 120], ["discountedRate", 120], ["netAmount", 120],
+              ] as [keyof PricedBomRow, number][]).map(([col, w]) => (
+                <td key={col} style={{ width: w, minWidth: w, maxWidth: w }}>
                   {BRT_SELECT_COLS.has(col) ? (
                     <select
                       className="brt-filter-select"
@@ -600,7 +600,7 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
                   )}
                 </td>
               ))}
-              <td />{/* Status */}
+              <td style={{ width: 120, minWidth: 120, maxWidth: 120 }} />{/* Status */}
             </tr>
           </thead>
           <tbody>
@@ -702,7 +702,7 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
                   </td>
 
                   {/* Category — read-only (set by DB lookup) */}
-                  <td className="col-cat td-muted">{row.category || "—"}</td>
+                  <td className="col-cat td-muted" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 150 }}>{row.category || "—"}</td>
 
                   {/* List Price — number, math on change */}
                   <td className="col-num">
