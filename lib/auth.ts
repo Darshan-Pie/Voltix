@@ -24,6 +24,10 @@ export const authOptions: AuthOptions = {
           throw new Error("No account found with this email.");
         }
 
+        if (!user.isActive) {
+          throw new Error("Access revoked. Please contact the administrator.");
+        }
+
         const isValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValid) {
