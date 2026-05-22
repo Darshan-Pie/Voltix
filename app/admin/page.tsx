@@ -13,6 +13,7 @@ interface AdminUser {
   email: string;
   name: string | null;
   role: UserRole;
+  isActive: boolean;
   canAccessAdminCatalog: boolean;
   createdAt: string;
 }
@@ -232,11 +233,13 @@ function UserRow({
   isSelf,
   onUpdate,
   onDelete,
+  onToggleAccess,
 }: {
   user: AdminUser;
   isSelf: boolean;
   onUpdate: (id: string, patch: Partial<AdminUser>) => Promise<void>;
   onDelete: (user: AdminUser) => void;
+  onToggleAccess: (user: AdminUser) => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
 
@@ -306,25 +309,57 @@ function UserRow({
         })}
       </td>
 
+      {/* Status badge */}
+      <td>
+        <span className={`adm-status-badge ${user.isActive ? "adm-status-active" : "adm-status-suspended"}`}>
+          <span className="adm-status-dot" />
+          {user.isActive ? "Active" : "Suspended"}
+        </span>
+      </td>
+
       {/* Actions */}
       <td>
-        {!isSelf && (
-          <button
-            id={`del-${user.id}`}
-            className="adm-del-btn"
-            onClick={() => onDelete(user)}
-            title="Delete user"
-            aria-label={`Delete ${user.name ?? user.email}`}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M2 4h10M5 4V2.5h4V4M5.5 6.5v4M8.5 6.5v4M3 4l.7 7.5h6.6L11 4"
-                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        )}
-        {isSelf && (
-          <span style={{ fontSize:11, color:"var(--text-muted)", padding:"0 6px" }}>You</span>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {!isSelf && (
+            <button
+              id={`toggle-${user.id}`}
+              className={`adm-access-btn ${user.isActive ? "adm-access-btn--revoke" : "adm-access-btn--restore"}`}
+              onClick={async () => { setBusy(true); await onToggleAccess(user); setBusy(false); }}
+              disabled={busy}
+              title={user.isActive ? "Suspend access" : "Restore access"}
+              aria-label={user.isActive ? `Suspend ${user.email}` : `Restore ${user.email}`}
+            >
+              {user.isActive ? (
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M5 5l4 4M9 5l-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M2.5 7.5l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+              {user.isActive ? "Revoke" : "Restore"}
+            </button>
+          )}
+          {!isSelf && (
+            <button
+              id={`del-${user.id}`}
+              className="adm-del-btn"
+              onClick={() => onDelete(user)}
+              title="Delete user"
+              aria-label={`Delete ${user.name ?? user.email}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M2 4h10M5 4V2.5h4V4M5.5 6.5v4M8.5 6.5v4M3 4l.7 7.5h6.6L11 4"
+                  stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+          {isSelf && (
+            <span style={{ fontSize:11, color:"var(--text-muted)", padding:"0 6px" }}>You</span>
+          )}
+        </div>
       </td>
     </motion.tr>
   );
@@ -376,6 +411,19 @@ export default function AdminPage() {
     if (res.ok) {
       const updated: AdminUser = await res.json();
       setUsers(prev => prev.map(u => u.id === id ? updated : u));
+    }
+  }
+
+  // ── Toggle active/suspended ───────────────────────────────────────────────
+  async function handleToggleAccess(user: AdminUser) {
+    const newIsActive = !user.isActive;
+    const res = await fetch("/api/admin/toggle-client", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, isActive: newIsActive }),
+    });
+    if (res.ok) {
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isActive: newIsActive } : u));
     }
   }
 
@@ -605,6 +653,77 @@ export default function AdminPage() {
           background: rgba(239,68,68,0.10);
           border-color: rgba(239,68,68,0.28);
           color: #f87171;
+        }
+
+        /* ── Status badge ─────────────────────────────────────────────── */
+        .adm-status-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 9px;
+          border-radius: 999px;
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .adm-status-dot {
+          width: 5px; height: 5px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .adm-status-active {
+          background: rgba(34,197,94,0.12);
+          color: #4ade80;
+          border: 1px solid rgba(34,197,94,0.28);
+        }
+        .adm-status-active .adm-status-dot {
+          background: #4ade80;
+          box-shadow: 0 0 4px rgba(74,222,128,0.7);
+        }
+        .adm-status-suspended {
+          background: rgba(239,68,68,0.09);
+          color: #f87171;
+          border: 1px solid rgba(239,68,68,0.24);
+        }
+        .adm-status-suspended .adm-status-dot {
+          background: #f87171;
+        }
+
+        /* ── Access toggle button ─────────────────────────────────────── */
+        .adm-access-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          border-radius: 7px;
+          font-size: 11px;
+          font-weight: 600;
+          font-family: var(--font-sans);
+          cursor: pointer;
+          border: 1px solid transparent;
+          transition: all 0.15s;
+          white-space: nowrap;
+        }
+        .adm-access-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .adm-access-btn--revoke {
+          background: rgba(239,68,68,0.09);
+          color: #f87171;
+          border-color: rgba(239,68,68,0.24);
+        }
+        .adm-access-btn--revoke:hover:not(:disabled) {
+          background: rgba(239,68,68,0.18);
+          border-color: rgba(239,68,68,0.44);
+        }
+        .adm-access-btn--restore {
+          background: rgba(34,197,94,0.09);
+          color: #4ade80;
+          border-color: rgba(34,197,94,0.24);
+        }
+        .adm-access-btn--restore:hover:not(:disabled) {
+          background: rgba(34,197,94,0.18);
+          border-color: rgba(34,197,94,0.44);
         }
 
         /* ── Buttons ──────────────────────────────────────────────────── */
@@ -837,6 +956,7 @@ export default function AdminPage() {
                   <th>User</th>
                   <th>Role</th>
                   <th>Catalog Access</th>
+                  <th>Status</th>
                   <th>Joined</th>
                   <th>Actions</th>
                 </tr>
@@ -850,6 +970,7 @@ export default function AdminPage() {
                       isSelf={user.id === session.user.id}
                       onUpdate={handleUpdate}
                       onDelete={setDeleteTarget}
+                      onToggleAccess={handleToggleAccess}
                     />
                   ))}
                 </tbody>

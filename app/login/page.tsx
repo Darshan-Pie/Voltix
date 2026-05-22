@@ -80,10 +80,11 @@ const cardVariants: Variants = {
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
-  const [email,    setEmail]    = useState("");
-  const [password, setPassword] = useState("");
-  const [error,    setError]    = useState("");
-  const [loading,  setLoading]  = useState(false);
+  const [email,        setEmail]        = useState("");
+  const [password,     setPassword]     = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error,        setError]        = useState("");
+  const [loading,      setLoading]      = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -317,6 +318,21 @@ export default function LoginPage() {
           box-shadow: 0 0 0 3px rgba(124,58,237,0.18);
         }
 
+        /* Password wrapper */
+        .login-pw-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        .login-pw-wrap .login-input { padding-right: 42px; }
+        .login-pw-eye {
+          position: absolute; right: 12px;
+          background: none; border: none; cursor: pointer;
+          color: var(--text-dim); padding: 0; line-height: 0;
+          transition: color 0.15s;
+        }
+        .login-pw-eye:hover { color: var(--violet); }
+
         .login-error {
           display: flex; align-items: center; gap: 8px;
           padding: 10px 14px; border-radius: 8px;
@@ -442,7 +458,7 @@ export default function LoginPage() {
             <motion.div variants={itemVariants}>
               <span className="sp-badge">
                 <span className="sp-badge-dot" />
-                Live — SQLite database connected
+                Live — PostgreSQL database connected
               </span>
             </motion.div>
           </motion.div>
@@ -522,16 +538,41 @@ export default function LoginPage() {
 
                 <div className="login-field">
                   <label htmlFor="login-password" className="login-label">Password</label>
-                  <input
-                    id="login-password"
-                    type="password"
-                    className="login-input"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                  />
+                  <div className="login-pw-wrap">
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      className="login-input"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      className="login-pw-eye"
+                      onClick={() => setShowPassword(v => !v)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        /* Eye-off icon */
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                          <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                          <path d="M1 1l22 22" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                          <path d="M10.73 10.73A3 3 0 0013.27 13.27" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                        </svg>
+                      ) : (
+                        /* Eye icon */
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="1.6"/>
+                          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <motion.button
