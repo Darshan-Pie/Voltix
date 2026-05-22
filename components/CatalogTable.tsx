@@ -52,15 +52,15 @@ type SortDir = "asc" | "desc";
 // Which column keys use a <select> combo box vs a free-text <input>
 const SELECT_COLS = new Set<keyof ComponentPrice>(["make", "category", "entryType"]);
 
-const SORTABLE_COLS: Array<{ key: keyof ComponentPrice; label: string; align?: "right" }> = [
-  { key: "catalogNumber", label: "Cat. No." },
-  { key: "description",   label: "Description" },
-  { key: "make",          label: "Make" },
-  { key: "category",      label: "Category" },
-  { key: "listPrice",     label: "List Price",  align: "right" },
-  { key: "discountPercent", label: "Disc %",    align: "right" },
-  { key: "netPrice",      label: "Net Price",   align: "right" },
-  { key: "entryType",     label: "Type" },
+const SORTABLE_COLS: Array<{ key: keyof ComponentPrice; label: string; align?: "right" | "center"; width: string }> = [
+  { key: "catalogNumber", label: "Cat. No.", width: "12%" },
+  { key: "description",   label: "Description", width: "25%" },
+  { key: "make",          label: "Make", width: "10%" },
+  { key: "category",      label: "Category", width: "10%" },
+  { key: "listPrice",     label: "List Price",  align: "right", width: "10%" },
+  { key: "discountPercent", label: "Disc %",    align: "right", width: "10%" },
+  { key: "netPrice",      label: "Net Price",   align: "right", width: "10%" },
+  { key: "entryType",     label: "Type", align: "center", width: "8%" },
 ];
 
 // ── SortIcon ─────────────────────────────────────────────────────────────────
@@ -274,15 +274,15 @@ export function CatalogTable({ items, onRefresh }: Props) {
 
       {/* ── Table ── */}
       <div className="table-wrap ct-table-wrap">
-        <table id="catalog-table">
+        <table id="catalog-table" className="w-full table-fixed" style={{ width: "100%", tableLayout: "fixed" }}>
           <thead>
             {/* ── Sort header row ── */}
             <tr>
-              {SORTABLE_COLS.map(({ key, label, align }) => (
+              {SORTABLE_COLS.map(({ key, label, align, width }) => (
                 <th
                   key={key}
                   className="ct-th-sortable"
-                  style={{ textAlign: align, minWidth: key === "description" ? 220 : undefined }}
+                  style={{ textAlign: align, width }}
                   onClick={() => handleSort(key)}
                   title={`Sort by ${label}`}
                 >
@@ -292,7 +292,7 @@ export function CatalogTable({ items, onRefresh }: Props) {
                   </span>
                 </th>
               ))}
-              <th>Actions</th>
+              <th style={{ width: "5%", textAlign: "center" }}>Actions</th>
             </tr>
 
             {/* ── Column filter row ── */}
@@ -362,10 +362,10 @@ export function CatalogTable({ items, onRefresh }: Props) {
                   <td style={{textAlign:"right", fontFamily:"var(--font-mono)", fontSize:12, color:"var(--success)"}}>
                     {isSaving ? <span className="animate-pulse" style={{color:"var(--text-muted)"}}>…</span> : fmtPrice(row.netPrice)}
                   </td>
-                  <td>
+                  <td style={{textAlign:"center"}}>
                     <span className={`badge ${ENTRY_COLORS[row.entryType] || "badge-muted"}`}>{row.entryType}</span>
                   </td>
-                  <td className="td-actions">
+                  <td className="td-actions" style={{textAlign:"center"}}>
                     <button
                       id={`btn-delete-${row.id}`}
                       className="btn btn-danger btn-sm btn-icon"
