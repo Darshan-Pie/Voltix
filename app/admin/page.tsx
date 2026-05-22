@@ -339,7 +339,7 @@ function UserRow({
                   <path d="M2.5 7.5l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
-              {user.isActive ? "Revoke" : "Restore"}
+              {user.isActive ? "Revoke Access" : "Restore Access"}
             </button>
           )}
           {!isSelf && (
