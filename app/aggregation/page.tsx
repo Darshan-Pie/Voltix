@@ -34,13 +34,13 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
   );
 }
 
-const AGG_COLS: Array<{ key: keyof AggregatedRow; label: string; cls: string; align?: "right" }> = [
-  { key: "description",   label: "Description",   cls: "agg-col-desc"  },
-  { key: "make",          label: "Make",           cls: "agg-col-make"  },
-  { key: "catalogNumber", label: "Catalogue No.",  cls: "agg-col-catno" },
-  { key: "totalQty",      label: "Total Qty",      cls: "agg-col-qty", align: "right" },
-  { key: "unit",          label: "Unit",           cls: "agg-col-unit"  },
-  { key: "sourceCount",   label: "Merged",         cls: "agg-col-src"   },
+const AGG_COLS: Array<{ key: keyof AggregatedRow; label: string; cls: string; align?: "center" | "right"; width: string }> = [
+  { key: "description",   label: "Description",   cls: "agg-col-desc", width: "35%"  },
+  { key: "make",          label: "Make",           cls: "agg-col-make", width: "15%"  },
+  { key: "catalogNumber", label: "Catalogue No.",  cls: "agg-col-catno", width: "15%" },
+  { key: "totalQty",      label: "Total Qty",      cls: "agg-col-qty", align: "center", width: "10%" },
+  { key: "unit",          label: "Unit",           cls: "agg-col-unit", align: "center", width: "10%"  },
+  { key: "sourceCount",   label: "Merged",         cls: "agg-col-src", align: "right", width: "15%"   },
 ];
 
 // Columns that use a <select> combo-box filter (exact match)
@@ -306,16 +306,16 @@ export default function AggregationPage() {
 
           {/* Table */}
           <div className="table-wrap">
-            <table id="agg-result-table">
+            <table id="agg-result-table" className="w-full table-fixed" style={{ width: "100%", tableLayout: "fixed" }}>
               <thead>
                 {/* Sort header row */}
                 <tr>
-                  <th style={{width:44}}>#</th>
-                  {AGG_COLS.map(({ key, label, cls, align }) => (
+                  <th style={{ width: "50px", textAlign: "center" }}>#</th>
+                  {AGG_COLS.map(({ key, label, cls, align, width }) => (
                     <th
                       key={key}
                       className={`${cls} agg-th-sort`}
-                      style={{ textAlign: align }}
+                      style={{ textAlign: align, width }}
                       onClick={() => handleSort(key)}
                       title={`Sort by ${label}`}
                     >
@@ -425,13 +425,7 @@ export default function AggregationPage() {
         }
         .agg-stat-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-        /* Column widths */
-        .agg-col-desc  { min-width: 240px; }
-        .agg-col-make  { min-width: 120px; }
-        .agg-col-catno { min-width: 140px; }
-        .agg-col-qty   { min-width: 90px; text-align: right; }
-        .agg-col-unit  { min-width: 64px; }
-        .agg-col-src   { min-width: 80px; }
+        /* Column widths handled by layout fixed and inline styles */
 
         /* Sortable headers */
         .agg-th-sort { cursor: pointer; user-select: none; }
