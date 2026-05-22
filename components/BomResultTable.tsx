@@ -534,7 +534,7 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
 
       {/* ── Table ────────────────────────────────────────────────────── */}
       <div className="table-wrap brt-table-wrap">
-        <table id="bom-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", minWidth: 1560, tableLayout: "fixed", borderCollapse: "collapse" }}>
+        <table id="bom-result-table" className="table-fixed border-collapse" style={{ width: "max-content", minWidth: 1560, tableLayout: "fixed", borderCollapse: "collapse" }}>
           <colgroup>
             <col style={{ width: 50 }} />
             <col style={{ width: 300 }} />
@@ -652,10 +652,10 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
                   }}
                 >
                   {/* Sr. No — read-only */}
-                  <td className="td-muted brt-td-srno">{row.srNo}</td>
+                  <td className="td-muted brt-td-srno" style={{ width: 50, minWidth: 50, maxWidth: 50 }}>{row.srNo}</td>
 
                   {/* Description — text, lookup on blur */}
-                  <td className="col-desc">
+                  <td className="col-desc" style={{ width: 300, minWidth: 300, maxWidth: 300 }}>
                     <BrtInput
                       id={`cell-${originalIdx}-desc`}
                       type="text"

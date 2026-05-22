@@ -306,7 +306,7 @@ export default function AggregationPage() {
 
           {/* Table */}
           <div className="table-wrap">
-            <table id="agg-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", minWidth: 970, tableLayout: "fixed", borderCollapse: "collapse" }}>
+            <table id="agg-result-table" className="table-fixed border-collapse" style={{ width: "max-content", minWidth: 970, tableLayout: "fixed", borderCollapse: "collapse" }}>
               <colgroup>
                 <col style={{ width: 50 }} />
                 <col style={{ width: 300 }} />
@@ -381,8 +381,8 @@ export default function AggregationPage() {
                 )}
                 {displayed.map((row) => (
                   <tr key={row.srNo} className={row.sourceCount > 1 ? "agg-row-merged" : ""}>
-                    <td className="td-muted" style={{textAlign:"center", fontSize:11}}>{row.srNo}</td>
-                    <td className="agg-col-desc" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.description}>{row.description}</td>
+                    <td className="td-muted" style={{ width: 50, minWidth: 50, maxWidth: 50, textAlign:"center", fontSize:11 }}>{row.srNo}</td>
+                    <td className="agg-col-desc" style={{ width: 300, minWidth: 300, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.description}>{row.description}</td>
                     <td className="agg-col-make" style={{color:"var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}} title={row.make}>{row.make || "—"}</td>
                     <td className="agg-col-catno" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       <span style={{fontFamily:"var(--font-mono)", fontSize:12, color:"var(--cyan)"}} title={row.catalogNumber || ""}>

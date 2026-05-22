@@ -274,7 +274,7 @@ export function CatalogTable({ items, onRefresh }: Props) {
 
       {/* ── Table ── */}
       <div className="table-wrap ct-table-wrap">
-        <table id="catalog-table" className="table-fixed w-full border-collapse" style={{ width: "100%", minWidth: 1290, tableLayout: "fixed", borderCollapse: "collapse" }}>
+        <table id="catalog-table" className="table-fixed border-collapse" style={{ width: "max-content", minWidth: 1290, tableLayout: "fixed", borderCollapse: "collapse" }}>
           <colgroup>
             <col style={{ width: 150 }} />
             <col style={{ width: 300 }} />
@@ -356,10 +356,10 @@ export function CatalogTable({ items, onRefresh }: Props) {
               const isDeleting = deleting === row.id;
               return (
                 <tr key={row.id} style={{ opacity: isDeleting ? 0.4 : 1, transition: "opacity 0.2s" }}>
-                  <td className="td-mono">
+                  <td className="td-mono" style={{ width: 150, minWidth: 150, maxWidth: 150 }}>
                     <EditableCell id={row.id} field="catalogNumber" value={row.catalogNumber || ""} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} placeholder="—" mono truncate />
                   </td>
-                  <td>
+                  <td style={{ width: 300, minWidth: 300, maxWidth: 300 }}>
                     <EditableCell id={row.id} field="description" value={row.description} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} truncate />
                   </td>
                   <td>
