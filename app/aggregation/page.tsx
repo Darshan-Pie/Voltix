@@ -342,7 +342,7 @@ export default function AggregationPage() {
 
                 {/* Column filter row */}
                 <tr className="agg-filter-row">
-                  <td style={{ width: 50, minWidth: 50, maxWidth: 50 }} />{/* # */}
+                  <td style={{ width: 50, minWidth: 50, maxWidth: 50 }}>&nbsp;</td>
                   {AGG_COLS.map(({ key, width }) => (
                     <td key={key} style={{ width, minWidth: width, maxWidth: width }}>
                       {AGG_SELECT_COLS.has(key) ? (

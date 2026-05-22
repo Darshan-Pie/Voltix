@@ -583,7 +583,7 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
 
             {/* ── Column filter row ── */}
             <tr className="brt-filter-row">
-              <td style={{ width: 50, minWidth: 50, maxWidth: 50 }} />{/* # */}
+              <td style={{ width: 50, minWidth: 50, maxWidth: 50 }}>&nbsp;</td>{/* # */}
               {([
                 ["description", 300], ["qty", 80], ["unit", 80], ["make", 150],
                 ["matchedCatalogNumber", 150], ["category", 150],
@@ -614,7 +614,7 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
                   )}
                 </td>
               ))}
-              <td style={{ width: 120, minWidth: 120, maxWidth: 120 }} />{/* Status */}
+              <td style={{ width: 120, minWidth: 120, maxWidth: 120 }}>&nbsp;</td>{/* Status */}
             </tr>
           </thead>
           <tbody>

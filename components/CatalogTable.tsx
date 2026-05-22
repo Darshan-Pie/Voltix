@@ -339,7 +339,7 @@ export function CatalogTable({ items, onRefresh }: Props) {
                   )}
                 </td>
               ))}
-              <td style={{ width: 100, minWidth: 100, maxWidth: 100 }} /> {/* actions column */}
+              <td style={{ width: 100, minWidth: 100, maxWidth: 100 }}>&nbsp;</td> {/* actions column */}
             </tr>
           </thead>
 
