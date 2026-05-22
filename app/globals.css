@@ -341,10 +341,10 @@ tbody tr:hover {
   position: relative;
 }
 /* Gradient cyan→violet left-border via ::before */
-tbody tr {
+tbody tr td:first-child {
   position: relative;
 }
-tbody tr::before {
+tbody tr td:first-child::before {
   content: '';
   position: absolute;
   left: 0; top: 0; bottom: 0;
@@ -355,7 +355,7 @@ tbody tr::before {
   transition: opacity 0.18s cubic-bezier(0.22,1,0.36,1);
   pointer-events: none;
 }
-tbody tr:hover::before {
+tbody tr:hover td:first-child::before {
   opacity: 1;
 }
 [data-theme="light"] tbody tr:hover {
@@ -363,7 +363,7 @@ tbody tr:hover::before {
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   backdrop-filter: blur(4px);
 }
-[data-theme="light"] tbody tr:hover::before {
+[data-theme="light"] tbody tr:hover td:first-child::before {
   opacity: 0.7;
 }
 
