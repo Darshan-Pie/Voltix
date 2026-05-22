@@ -534,7 +534,21 @@ export function BomResultTable({ rows, summary: initialSummary, fileName, onRese
 
       {/* ── Table ────────────────────────────────────────────────────── */}
       <div className="table-wrap brt-table-wrap">
-        <table id="bom-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
+        <table id="bom-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", minWidth: 1560, tableLayout: "fixed", borderCollapse: "collapse" }}>
+          <colgroup>
+            <col style={{ width: 50 }} />
+            <col style={{ width: 300 }} />
+            <col style={{ width: 80 }} />
+            <col style={{ width: 80 }} />
+            <col style={{ width: 150 }} />
+            <col style={{ width: 150 }} />
+            <col style={{ width: 150 }} />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 120 }} />
+          </colgroup>
           <thead>
             {/* ── Sort header row ── */}
             <tr>

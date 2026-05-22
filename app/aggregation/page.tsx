@@ -306,7 +306,16 @@ export default function AggregationPage() {
 
           {/* Table */}
           <div className="table-wrap">
-            <table id="agg-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
+            <table id="agg-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", minWidth: 970, tableLayout: "fixed", borderCollapse: "collapse" }}>
+              <colgroup>
+                <col style={{ width: 50 }} />
+                <col style={{ width: 300 }} />
+                <col style={{ width: 150 }} />
+                <col style={{ width: 150 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 120 }} />
+              </colgroup>
               <thead>
                 {/* Sort header row */}
                 <tr>

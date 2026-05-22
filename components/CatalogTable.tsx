@@ -274,7 +274,18 @@ export function CatalogTable({ items, onRefresh }: Props) {
 
       {/* ── Table ── */}
       <div className="table-wrap ct-table-wrap">
-        <table id="catalog-table" className="table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
+        <table id="catalog-table" className="table-fixed w-full border-collapse" style={{ width: "100%", minWidth: 1290, tableLayout: "fixed", borderCollapse: "collapse" }}>
+          <colgroup>
+            <col style={{ width: 150 }} />
+            <col style={{ width: 300 }} />
+            <col style={{ width: 150 }} />
+            <col style={{ width: 150 }} />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 100 }} />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 100 }} />
+            <col style={{ width: 100 }} />
+          </colgroup>
           <thead>
             {/* ── Sort header row ── */}
             <tr>

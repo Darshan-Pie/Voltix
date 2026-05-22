@@ -950,7 +950,15 @@ export default function AdminPage() {
               {search ? `No users match "${search}"` : "No users found."}
             </div>
           ) : (
-            <table className="adm-table table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }} aria-label="User management table">
+            <table className="adm-table table-fixed w-full border-collapse" style={{ width: "100%", minWidth: 990, tableLayout: "fixed", borderCollapse: "collapse" }} aria-label="User management table">
+              <colgroup>
+                <col style={{ width: 300 }} />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 150 }} />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 150 }} />
+                <col style={{ width: 150 }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th style={{ width: 300, minWidth: 300, maxWidth: 300 }}>User</th>
