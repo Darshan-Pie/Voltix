@@ -90,11 +90,11 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await signIn("credentials", { email, password, redirect: false });
+    const res = await signIn("credentials", { redirect: false, email, password });
     setLoading(false);
-    if (result?.error) {
-      setError(result.error);
-    } else {
+    if (res?.error) {
+      setError(res.error);
+    } else if (res?.ok) {
       router.push("/");
       router.refresh();
     }
