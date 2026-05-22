@@ -52,15 +52,15 @@ type SortDir = "asc" | "desc";
 // Which column keys use a <select> combo box vs a free-text <input>
 const SELECT_COLS = new Set<keyof ComponentPrice>(["make", "category", "entryType"]);
 
-const SORTABLE_COLS: Array<{ key: keyof ComponentPrice; label: string; align?: "right" | "center"; width: string }> = [
-  { key: "catalogNumber", label: "Cat. No.", width: "12%" },
-  { key: "description",   label: "Description", width: "25%" },
-  { key: "make",          label: "Make", width: "10%" },
-  { key: "category",      label: "Category", width: "10%" },
-  { key: "listPrice",     label: "List Price",  align: "right", width: "10%" },
-  { key: "discountPercent", label: "Disc %",    align: "right", width: "10%" },
-  { key: "netPrice",      label: "Net Price",   align: "right", width: "10%" },
-  { key: "entryType",     label: "Type", align: "center", width: "8%" },
+const SORTABLE_COLS: Array<{ key: keyof ComponentPrice; label: string; align?: "right" | "center"; width: number; truncate?: boolean }> = [
+  { key: "catalogNumber", label: "Cat. No.", width: 150, truncate: true },
+  { key: "description",   label: "Description", width: 300, truncate: true },
+  { key: "make",          label: "Make", width: 150, truncate: true },
+  { key: "category",      label: "Category", width: 150, truncate: true },
+  { key: "listPrice",     label: "List Price",  align: "right", width: 120 },
+  { key: "discountPercent", label: "Disc %",    align: "right", width: 100 },
+  { key: "netPrice",      label: "Net Price",   align: "right", width: 120 },
+  { key: "entryType",     label: "Type", align: "center", width: 100 },
 ];
 
 // ── SortIcon ─────────────────────────────────────────────────────────────────
@@ -274,15 +274,19 @@ export function CatalogTable({ items, onRefresh }: Props) {
 
       {/* ── Table ── */}
       <div className="table-wrap ct-table-wrap">
-        <table id="catalog-table" className="w-full table-fixed" style={{ width: "100%", tableLayout: "fixed" }}>
+        <table id="catalog-table" className="table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
           <thead>
             {/* ── Sort header row ── */}
             <tr>
-              {SORTABLE_COLS.map(({ key, label, align, width }) => (
+              {SORTABLE_COLS.map(({ key, label, align, width, truncate }) => (
                 <th
                   key={key}
                   className="ct-th-sortable"
-                  style={{ textAlign: align, width }}
+                  style={{
+                    textAlign: align,
+                    width, minWidth: width, maxWidth: width,
+                    ...(truncate ? { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } : {})
+                  }}
                   onClick={() => handleSort(key)}
                   title={`Sort by ${label}`}
                 >
@@ -292,13 +296,13 @@ export function CatalogTable({ items, onRefresh }: Props) {
                   </span>
                 </th>
               ))}
-              <th style={{ width: "5%", textAlign: "center" }}>Actions</th>
+              <th style={{ width: 100, minWidth: 100, maxWidth: 100, textAlign: "center" }}>Actions</th>
             </tr>
 
             {/* ── Column filter row ── */}
             <tr className="ct-filter-row">
-              {SORTABLE_COLS.map(({ key, align }) => (
-                <td key={key}>
+              {SORTABLE_COLS.map(({ key, align, width }) => (
+                <td key={key} style={{ width, minWidth: width, maxWidth: width }}>
                   {SELECT_COLS.has(key) ? (
                     <select
                       className="ct-filter-select"
@@ -324,7 +328,7 @@ export function CatalogTable({ items, onRefresh }: Props) {
                   )}
                 </td>
               ))}
-              <td /> {/* actions column */}
+              <td style={{ width: 100, minWidth: 100, maxWidth: 100 }} /> {/* actions column */}
             </tr>
           </thead>
 
@@ -342,16 +346,16 @@ export function CatalogTable({ items, onRefresh }: Props) {
               return (
                 <tr key={row.id} style={{ opacity: isDeleting ? 0.4 : 1, transition: "opacity 0.2s" }}>
                   <td className="td-mono">
-                    <EditableCell id={row.id} field="catalogNumber" value={row.catalogNumber || ""} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} placeholder="—" mono />
+                    <EditableCell id={row.id} field="catalogNumber" value={row.catalogNumber || ""} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} placeholder="—" mono truncate />
                   </td>
                   <td>
-                    <EditableCell id={row.id} field="description" value={row.description} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} />
+                    <EditableCell id={row.id} field="description" value={row.description} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} truncate />
                   </td>
                   <td>
-                    <EditableCell id={row.id} field="make" value={row.make} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} />
+                    <EditableCell id={row.id} field="make" value={row.make} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} truncate />
                   </td>
                   <td>
-                    <EditableCell id={row.id} field="category" value={row.category} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} />
+                    <EditableCell id={row.id} field="category" value={row.category} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} truncate />
                   </td>
                   <td style={{textAlign:"right"}}>
                     <EditableCell id={row.id} field="listPrice" value={String(row.listPrice)} editing={editing} onStart={startEdit} onChange={(v) => setEditing(e => e ? {...e, value: v} : e)} onCommit={commitEdit} mono align="right" prefix="₹" />
@@ -518,9 +522,10 @@ interface ECProps {
   align?: "left" | "right" | "center";
   prefix?: string;
   suffix?: string;
+  truncate?: boolean;
 }
 
-function EditableCell({ id, field, value, editing, onStart, onChange, onCommit, placeholder, mono, align, prefix, suffix }: ECProps) {
+function EditableCell({ id, field, value, editing, onStart, onChange, onCommit, placeholder, mono, align, prefix, suffix, truncate }: ECProps) {
   const isEditing = editing?.id === id && editing?.field === field;
   if (isEditing) {
     return (
@@ -549,6 +554,7 @@ function EditableCell({ id, field, value, editing, onStart, onChange, onCommit, 
         color:      mono ? "var(--cyan)" : undefined,
         textAlign:  align || "left",
         display: "block",
+        ...(truncate ? { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } : {})
       }}
     >
       {prefix && <span style={{color:"var(--text-muted)"}}>{prefix}</span>}

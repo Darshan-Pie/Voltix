@@ -34,13 +34,13 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
   );
 }
 
-const AGG_COLS: Array<{ key: keyof AggregatedRow; label: string; cls: string; align?: "center" | "right"; width: string }> = [
-  { key: "description",   label: "Description",   cls: "agg-col-desc", width: "35%"  },
-  { key: "make",          label: "Make",           cls: "agg-col-make", width: "15%"  },
-  { key: "catalogNumber", label: "Catalogue No.",  cls: "agg-col-catno", width: "15%" },
-  { key: "totalQty",      label: "Total Qty",      cls: "agg-col-qty", align: "center", width: "10%" },
-  { key: "unit",          label: "Unit",           cls: "agg-col-unit", align: "center", width: "10%"  },
-  { key: "sourceCount",   label: "Merged",         cls: "agg-col-src", align: "right", width: "15%"   },
+const AGG_COLS: Array<{ key: keyof AggregatedRow; label: string; cls: string; align?: "center" | "right"; width: number; truncate?: boolean }> = [
+  { key: "description",   label: "Description",   cls: "agg-col-desc", width: 300, truncate: true },
+  { key: "make",          label: "Make",           cls: "agg-col-make", width: 150, truncate: true },
+  { key: "catalogNumber", label: "Catalogue No.",  cls: "agg-col-catno", width: 150, truncate: true },
+  { key: "totalQty",      label: "Total Qty",      cls: "agg-col-qty", align: "center", width: 100 },
+  { key: "unit",          label: "Unit",           cls: "agg-col-unit", align: "center", width: 100 },
+  { key: "sourceCount",   label: "Merged",         cls: "agg-col-src", align: "right", width: 120 },
 ];
 
 // Columns that use a <select> combo-box filter (exact match)
@@ -306,16 +306,20 @@ export default function AggregationPage() {
 
           {/* Table */}
           <div className="table-wrap">
-            <table id="agg-result-table" className="w-full table-fixed" style={{ width: "100%", tableLayout: "fixed" }}>
+            <table id="agg-result-table" className="table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
               <thead>
                 {/* Sort header row */}
                 <tr>
-                  <th style={{ width: "50px", textAlign: "center" }}>#</th>
-                  {AGG_COLS.map(({ key, label, cls, align, width }) => (
+                  <th style={{ width: 50, minWidth: 50, maxWidth: 50, textAlign: "center" }}>#</th>
+                  {AGG_COLS.map(({ key, label, cls, align, width, truncate }) => (
                     <th
                       key={key}
                       className={`${cls} agg-th-sort`}
-                      style={{ textAlign: align, width }}
+                      style={{
+                        textAlign: align,
+                        width, minWidth: width, maxWidth: width,
+                        ...(truncate ? { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } : {})
+                      }}
                       onClick={() => handleSort(key)}
                       title={`Sort by ${label}`}
                     >
@@ -329,9 +333,9 @@ export default function AggregationPage() {
 
                 {/* Column filter row */}
                 <tr className="agg-filter-row">
-                  <td />{/* # */}
-                  {AGG_COLS.map(({ key }) => (
-                    <td key={key}>
+                  <td style={{ width: 50, minWidth: 50, maxWidth: 50 }} />{/* # */}
+                  {AGG_COLS.map(({ key, width }) => (
+                    <td key={key} style={{ width, minWidth: width, maxWidth: width }}>
                       {AGG_SELECT_COLS.has(key) ? (
                         <select
                           className="agg-filter-select"
@@ -369,10 +373,10 @@ export default function AggregationPage() {
                 {displayed.map((row) => (
                   <tr key={row.srNo} className={row.sourceCount > 1 ? "agg-row-merged" : ""}>
                     <td className="td-muted" style={{textAlign:"center", fontSize:11}}>{row.srNo}</td>
-                    <td className="agg-col-desc">{row.description}</td>
-                    <td className="agg-col-make" style={{color:"var(--text-dim)"}}>{row.make || "—"}</td>
-                    <td className="agg-col-catno">
-                      <span style={{fontFamily:"var(--font-mono)", fontSize:12, color:"var(--cyan)"}}>
+                    <td className="agg-col-desc" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.description}>{row.description}</td>
+                    <td className="agg-col-make" style={{color:"var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}} title={row.make}>{row.make || "—"}</td>
+                    <td className="agg-col-catno" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{fontFamily:"var(--font-mono)", fontSize:12, color:"var(--cyan)"}} title={row.catalogNumber || ""}>
                         {row.catalogNumber || "—"}
                       </span>
                     </td>

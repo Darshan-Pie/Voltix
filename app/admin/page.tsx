@@ -262,12 +262,12 @@ function UserRow({
       style={{ opacity: busy ? 0.6 : 1 }}
     >
       {/* User identity */}
-      <td>
+      <td style={{ width: 300, minWidth: 300, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div className="adm-avatar" aria-hidden="true">{initials}</div>
-          <div>
-            <div className="adm-user-name">{user.name ?? <em style={{color:"var(--text-muted)"}}>No name</em>}</div>
-            <div className="adm-user-email">{user.email}</div>
+          <div style={{ overflow: "hidden", minWidth: 0 }}>
+            <div className="adm-user-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name ?? <em style={{color:"var(--text-muted)"}}>No name</em>}</div>
+            <div className="adm-user-email" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
           </div>
         </div>
       </td>
@@ -950,15 +950,15 @@ export default function AdminPage() {
               {search ? `No users match "${search}"` : "No users found."}
             </div>
           ) : (
-            <table className="adm-table" aria-label="User management table">
+            <table className="adm-table table-fixed w-full border-collapse" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }} aria-label="User management table">
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Role</th>
-                  <th>Catalog Access</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
+                  <th style={{ width: 300, minWidth: 300, maxWidth: 300 }}>User</th>
+                  <th style={{ width: 120, minWidth: 120, maxWidth: 120 }}>Role</th>
+                  <th style={{ width: 150, minWidth: 150, maxWidth: 150 }}>Catalog Access</th>
+                  <th style={{ width: 120, minWidth: 120, maxWidth: 120 }}>Status</th>
+                  <th style={{ width: 150, minWidth: 150, maxWidth: 150 }}>Joined</th>
+                  <th style={{ width: 150, minWidth: 150, maxWidth: 150 }}>Actions</th>
                 </tr>
               </thead>
               <AnimatePresence initial={false}>
